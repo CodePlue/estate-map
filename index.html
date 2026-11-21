@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
+<title>Estate Sales Map</title>
+<link rel="preconnect" href="https://server.arcgisonline.com" crossorigin>
+<link rel="preconnect" href="https://gist.githubusercontent.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.92);
+  --wash: #f1f5f9;
+  --line: #e2e8f0;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --accent: #2563eb;
+  --accent-soft: rgba(37, 99, 235, 0.12);
+  --open: #10b981;
+  --soon: #f59e0b;
+  --closed: #94a3b8;
+  --na: #94a3b8;
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 28px rgba(15, 23, 42, 0.14);
+  --shadow-pin: 0 3px 10px rgba(15, 23, 42, 0.22);
+  --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sh: 46dvh;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1120;
+    --surface: #131c31;
+    --surface-glass: rgba(19, 28, 49, 0.92);
+    --wash: #1c2842;
+    --line: #24324f;
+    --ink: #f1f5f9;
+    --muted: #94a3b8;
+    --accent: #3b82f6;
+    --accent-soft: rgba(59, 130, 246, 0.18);
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 10px 32px rgba(0, 0, 0, 0.52);
+    --shadow-pin: 0 4px 14px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1120;
+  --surface: #131c31;
+  --surface-glass: rgba(19, 28, 49, 0.92);
+  --wash: #1c2842;
+  --line: #24324f;
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.18);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 10px 32px rgba(0, 0, 0, 0.52);
+  --shadow-pin: 0 4px 14px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font: 400 14px/1.4 var(--font); -webkit-font-smoothing: antialiased; }
+button, select { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+
+/* Map */
+#map { position: fixed; inset: 0; z-index: 0; background: var(--bg); }
+.leaflet-container { font-family: var(--font); }
+.leaflet-control-attribution {
+  font-size: 9px; opacity: 0.65; background: transparent !important;
+  color: var(--muted) !important; padding: 2px 6px !important;
+}
+.leaflet-control-attribution a { color: var(--muted) !important; }
+.leaflet-bar { border: 1px solid var(--line) !important; border-radius: 12px !important; overflow: hidden; box-shadow: var(--shadow-sm) !important; }
+.leaflet-bar a { background: var(--surface) !important; color: var(--ink) !important; border-color: var(--line) !important; width: 34px !important; height: 34px !important; line-height: 34px !important; }
+
+/* Informative pill pins */
+.pin-wrap { background: none; border: 0; }
+.pill-pin {
+  position: relative; display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 9px 5px 7px; border-radius: 999px;
+  background: var(--surface); color: var(--ink);
+  border: 1.5px solid var(--line); box-shadow: var(--shadow-pin);
+  font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap;
+  transform: translate(-50%, -100%); transition: transform 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+.pill-pin::after {
+  content: ""; position: absolute; left: 50%; bottom: -5px; width: 8px; height: 8px;
+  background: inherit; border-right: 1.5px solid var(--line); border-bottom: 1.5px solid var(--line);
+  transform: translateX(-50%) rotate(45deg);
+}
+.pill-pin .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--na); }
+.pill-pin.open .dot { background: var(--open); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22); }
+.pill-pin.soon .dot { background: var(--soon); }
+.pill-pin.closed { opacity: 0.72; }
+.pill-pin.closed .dot { background: var(--closed); }
+.pin-wrap.sel { z-index: 1000 !important; }
+.pin-wrap.sel .pill-pin {
+  background: var(--ink); color: var(--surface); border-color: var(--ink);
+  transform: translate(-50%, -100%) scale(1.12);
+  box-shadow: 0 0 0 3.5px var(--accent-soft), 0 8px 20px rgba(0, 0, 0, 0.32);
+}
+.pin-wrap.sel .pill-pin::after { border-color: var(--ink); }
+
+.me-dot {
+  width: 16px; height: 16px; border-radius: 50%; background: var(--accent);
+  border: 3px solid #fff; box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.55);
+  animation: gps-ping 2.2s infinite;
+}
+@keyframes gps-ping { 70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); } }
+
+/* Floating top bar (mobile) */
+.topbar {
+  position: fixed; top: calc(10px + var(--safe-t)); left: 12px; right: 12px; z-index: 500;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  pointer-events: none;
+}
+.topbar > * { pointer-events: auto; }
+.title-pill {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px;
+  border-radius: 999px; background: var(--surface-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line); box-shadow: var(--shadow-sm); min-width: 0;
+}
+.title-pill h1 { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
+.title-pill .cnt { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.top-actions { display: flex; align-items: center; gap: 6px; }
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 40px; min-width: 40px; padding: 0 12px; border-radius: 999px;
+  background: var(--surface-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+  font-size: 13px; font-weight: 600; transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.icon-btn.sq { padding: 0; width: 40px; }
+.icon-btn svg { width: 17px; height: 17px; flex: none; }
+.icon-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.icon-btn.loading svg { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Sheet (mobile bottom sheet / desktop left panel) */
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; height: var(--sh); z-index: 600;
+  background: var(--surface); border-radius: 22px 22px 0 0;
+  border-top: 1px solid var(--line); box-shadow: var(--shadow-md);
+  display: flex; flex-direction: column;
+  transition: height 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+  padding-bottom: var(--safe-b);
+}
+.dragging .sheet { transition: none; }
+.grab { padding: 8px 16px 10px; touch-action: none; cursor: grab; flex: none; }
+.handle { width: 38px; height: 4px; border-radius: 99px; background: var(--line); margin: 0 auto 10px; }
+.desk-head { display: none; }
+
+/* Toolbar inside sheet header */
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; }
+.chips { display: flex; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 10px;
+  border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+  font-size: 12.5px; font-weight: 600; white-space: nowrap; transition: all 0.14s;
+}
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+.chip .n { font-variant-numeric: tabular-nums; color: var(--muted); }
+.chip[aria-pressed="false"] { opacity: 0.5; border-style: dashed; background: transparent; }
+.summary-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.summary-tag .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.sort-wrap { position: relative; flex: none; }
+select.sort {
+  height: 30px; padding: 0 26px 0 11px; border-radius: 999px;
+  background: var(--wash); color: var(--ink); font-size: 12.5px; font-weight: 600;
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+
+.body { flex: 1; overflow-y: auto; overscroll-behavior: contain; border-top: 1px solid var(--line); }
+
+/* Inline notice banner */
+.notice {
+  margin: 10px 14px 4px; padding: 10px 12px; border-radius: 12px;
+  background: var(--wash); border: 1px solid var(--line);
+  font-size: 12.5px; color: var(--ink); display: flex; flex-direction: column; gap: 8px;
+}
+.notice p { color: var(--muted); line-height: 1.35; }
+.notice-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.nbtn {
+  display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 11px;
+  border-radius: 8px; font-size: 12.5px; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--line);
+}
+.nbtn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Sale rows */
+.row {
+  display: grid; grid-template-columns: 64px 1fr 16px; gap: 12px; align-items: center;
+  width: 100%; text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line);
+  transition: background 0.12s;
+}
+.row:hover, .row:active { background: var(--wash); }
+.thumb {
+  position: relative; width: 64px; height: 64px; border-radius: 12px; overflow: hidden;
+  background: var(--wash); border: 1px solid var(--line); display: grid; place-items: center; color: var(--muted);
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb .sdot {
+  position: absolute; top: 5px; left: 5px; width: 10px; height: 10px; border-radius: 50%;
+  border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+}
+.row-main { min-width: 0; }
+.row h2 {
+  font-size: 14.5px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.row .sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .sub .live { color: var(--open); font-weight: 600; }
+.row .facts {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0;
+  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+  margin-top: 4px; color: var(--ink);
+}
+.row .facts span + span::before { content: "·"; margin: 0 6px; color: var(--muted); font-weight: 400; }
+.row .facts .mi { color: var(--accent); }
+.row .chev { color: var(--muted); opacity: 0.65; }
+
+.empty { padding: 32px 20px; text-align: center; color: var(--muted); }
+.empty button { margin-top: 10px; padding: 7px 14px; border-radius: 999px; background: var(--wash); color: var(--ink); font-weight: 600; }
+
+/* Detail view */
+.dnav { display: flex; align-items: center; gap: 4px; }
+.dnav .back {
+  display: inline-flex; align-items: center; gap: 4px; height: 34px; padding: 0 10px 0 4px;
+  border-radius: 999px; font-size: 13.5px; font-weight: 600;
+}
+.dnav .back:hover, .dnav .step:hover { background: var(--wash); }
+.dnav .pos { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 4px; }
+.dnav .step { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; }
+.dnav .step:disabled { opacity: 0.28; cursor: default; }
+
+.detail { padding: 14px 16px 28px; }
+.hero {
+  display: block; position: relative; border-radius: 14px; overflow: hidden;
+  background: var(--wash); aspect-ratio: 16 / 9; margin-bottom: 14px; border: 1px solid var(--line);
+}
+.hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero .count {
+  position: absolute; right: 10px; bottom: 10px; padding: 4px 10px; border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78); color: #fff; font-size: 12px; font-weight: 600;
+  backdrop-filter: blur(6px);
+}
+.detail h2 { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+.meta-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.mpill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+  background: var(--wash); font-size: 12.5px; font-weight: 600;
+}
+.mpill .dot { width: 8px; height: 8px; border-radius: 50%; }
+.mpill.dist { background: var(--accent-soft); color: var(--accent); font-variant-numeric: tabular-nums; }
+
+.addr-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  margin-top: 10px; padding: 9px 12px; border-radius: 10px; background: var(--wash);
+  text-align: left; font-size: 13.5px; color: var(--ink);
+}
+.addr-btn span:last-child { font-size: 11.5px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+
+.actions { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px; margin: 14px 0 18px; }
+.btn {
+  height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 13.5px; font-weight: 600; background: var(--wash); border: 1px solid var(--line);
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.disabled { opacity: 0.4; pointer-events: none; }
+
+.sec {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); margin: 0 0 8px;
+}
+.sec small { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 18px;
+}
+.grid div { background: var(--surface); padding: 10px 12px; }
+.grid dt { font-size: 11.5px; color: var(--muted); }
+.grid dd { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 1px; }
+.grid dd.txt { font-size: 13px; font-weight: 600; }
+
+.days { list-style: none; margin-bottom: 16px; }
+.days li {
+  display: flex; justify-content: space-between; gap: 12px; padding: 7px 0;
+  border-bottom: 1px dashed var(--line); font-size: 13.5px; font-variant-numeric: tabular-nums;
+}
+.days li.today { font-weight: 700; }
+.days li.past { color: var(--muted); }
+.host { font-size: 12.5px; color: var(--muted); }
+
+/* Desktop sidebar */
+@media (min-width: 860px) {
+  :root { --sh: 0px; }
+  .topbar { display: none; }
+  .sheet {
+    top: 14px; left: 14px; bottom: 14px; right: auto; width: 410px; height: auto !important;
+    border-radius: 20px; border: 1px solid var(--line); padding-bottom: 0;
+  }
+  .grab { cursor: default; padding: 16px 16px 12px; }
+  .handle { display: none; }
+  .desk-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .desk-head h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  .desk-head .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .desk-acts { display: flex; align-items: center; gap: 6px; }
+  .desk-acts .icon-btn { height: 34px; min-width: 34px; padding: 0 10px; font-size: 12.5px; box-shadow: none; background: var(--wash); }
+  .desk-acts .icon-btn.sq { width: 34px; padding: 0; }
+  .desk-acts .icon-btn.active { background: var(--accent); color: #fff; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<div id="map" role="region" aria-label="Map of estate sales"></div>
+
+<header class="topbar" id="topbar">
+  <div class="title-pill">
+    <h1 id="m-title">Estate Sales</h1>
+    <span class="cnt" id="m-cnt"></span>
+  </div>
+  <div class="top-actions">
+    <button class="icon-btn" id="m-locate" aria-label="Use my location"></button>
+    <button class="icon-btn sq" id="m-fit" aria-label="Fit all sales">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="sheet" id="sheet" aria-label="Estate sales">
+  <div class="grab" id="grab">
+    <div class="handle"></div>
+    <div class="desk-head" id="desk-head">
+      <div>
+        <h1 id="d-title">Estate Sales</h1>
+        <div class="meta" id="d-meta"></div>
+      </div>
+      <div class="desk-acts">
+        <button class="icon-btn" id="d-locate" aria-label="Use my location"></button>
+        <button class="icon-btn sq" id="d-fit" aria-label="Fit all sales">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="top"></div>
+  </div>
+  <div class="body" id="body"><p class="empty">Loading estate sales…</p></div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const tg = window.Telegram?.WebApp;
+const inTMA = Boolean(tg && tg.initData && tg.platform && tg.platform !== "unknown");
+if (inTMA) { try { tg.ready(); tg.expand(); } catch {} }
+
+const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k) { try { return localStorage.getItem("estate." + k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem("estate." + k, v); } catch {} },
+};
+
+// ---------- theme + map ----------
+const TILES = {
+  light: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+  dark: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+  darkRef: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+};
+const darkMQ = matchMedia("(prefers-color-scheme: dark)");
+function isDark() {
+  if (inTMA && (tg.colorScheme === "dark" || tg.colorScheme === "light")) return tg.colorScheme === "dark";
+  return darkMQ.matches;
+}
+const map = L.map("map", { zoomControl: false, attributionControl: false, zoomSnap: 0.25 }).setView([28.54, -81.38], 10);
+L.control.attribution({ position: "bottomright", prefix: false }).addTo(map);
+const tileLayer = L.tileLayer(isDark() ? TILES.dark : TILES.light, { maxZoom: 19, attribution: "Tiles &copy; Esri" }).addTo(map);
+const darkLabels = L.tileLayer(TILES.darkRef, { maxZoom: 19, pane: "overlayPane" });
+if (matchMedia("(min-width: 860px)").matches) L.control.zoom({ position: "topright" }).addTo(map);
+
+function applyTheme() {
+  const dark = isDark();
+  if (inTMA && tg.colorScheme) document.documentElement.dataset.theme = dark ? "dark" : "light";
+  tileLayer.setUrl(dark ? TILES.dark : TILES.light);
+  if (dark) { if (!map.hasLayer(darkLabels)) darkLabels.addTo(map); }
+  else { if (map.hasLayer(darkLabels)) map.removeLayer(darkLabels); }
+}
+darkMQ.addEventListener?.("change", applyTheme);
+if (inTMA) tg.onEvent?.("themeChanged", applyTheme);
+applyTheme();
+
+// ---------- bottom sheet drag ----------
+let snap = "mid";
+const SNAPS = { peek: 0.21, mid: 0.46, full: 0.87 };
+function setSnap(n) {
+  snap = n;
+  document.documentElement.style.setProperty("--sh", innerWidth >= 860 ? "0px" : `${Math.round(innerHeight * SNAPS[n])}px`);
+}
+(() => {
+  const grab = $("#grab"); let y0 = null, h0 = 0, moved = false;
+  grab.addEventListener("pointerdown", (e) => {
+    if (innerWidth >= 860 || e.target.closest("button, select, a")) return;
+    y0 = e.clientY; h0 = $("#sheet").offsetHeight; moved = false;
+    grab.setPointerCapture(e.pointerId); document.body.classList.add("dragging");
+  });
+  grab.addEventListener("pointermove", (e) => {
+    if (y0 == null) return;
+    const dy = y0 - e.clientY; if (Math.abs(dy) > 5) moved = true;
+    const h = Math.min(innerHeight * 0.92, Math.max(innerHeight * 0.16, h0 + dy));
+    document.documentElement.style.setProperty("--sh", `${h}px`);
+  });
+  grab.addEventListener("pointerup", () => {
+    if (y0 == null) return;
+    document.body.classList.remove("dragging");
+    const frac = $("#sheet").offsetHeight / innerHeight;
+    if (!moved) setSnap(snap === "mid" ? "full" : snap === "full" ? "peek" : "mid");
+    else setSnap(Object.entries(SNAPS).reduce((a, b) => (Math.abs(b[1] - frac) < Math.abs(a[1] - frac) ? b : a))[0]);
+    y0 = null;
+  });
+})();
+setSnap("mid");
+addEventListener("resize", () => setSnap(snap));
+
+// ---------- load sales.json from GitHub Gist ----------
+async function fetchData() {
+  const q = new URLSearchParams(location.search);
+  const g = q.get("g");
+  const u = q.get("u");
+  const c = q.get("c");
+  if (!g) throw new Error("Missing map data link. Send .e in Telegram to open today's map.");
+  // Fast path: raw CDN with exact revision SHA (zero cache lag, no API rate limit).
+  if (u && c) {
+    try {
+      const r = await fetch(`https://gist.githubusercontent.com/${encodeURIComponent(u)}/${encodeURIComponent(g)}/raw/${encodeURIComponent(c)}/sales.json`);
+      if (r.ok) return await r.json();
+    } catch {}
+  }
+  const r = await fetch(`https://api.github.com/gists/${encodeURIComponent(g)}`);
+  if (!r.ok) throw new Error(`Could not load estate sales data (HTTP ${r.status}).`);
+  const gist = await r.json();
+  const file = gist.files?.["sales.json"] || Object.values(gist.files || {})[0];
+  if (!file?.content) throw new Error("Estate sales data file was empty.");
+  return JSON.parse(file.content);
+}
+
+// ---------- main app ----------
+function startApp(DATA) {
+  const tFmt = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" });
+  const dFmt = new Intl.DateTimeFormat([], { weekday: "short", month: "short", day: "numeric" });
+  const time = (d) => tFmt.format(d).replace(":00", "");
+  const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const pageDay = new Date(DATA.date + "T12:00:00");
+  const isToday = () => ymd(new Date()) === DATA.date;
+
+  function dayOf(s) { return s.days.find((d) => ymd(new Date(d.start)) === DATA.date); }
+  function status(s) {
+    const d = dayOf(s);
+    if (!d) return { k: "na", label: "Hours not posted" };
+    const now = new Date(), st = new Date(d.start), en = new Date(d.end);
+    if (d.showEnd && now >= en) return { k: "closed", label: ymd(now) === DATA.date ? `Closed ${time(en)}` : "Ended" };
+    if (now < st) return { k: "soon", label: ymd(now) === DATA.date ? `Opens ${time(st)}` : `Opens ${dFmt.format(st)}, ${time(st)}` };
+    if (!d.showEnd) return { k: "open", label: `Open · since ${time(st)}` };
+    const left = Math.round((en - now) / 60000);
+    return { k: "open", label: `Open · closes ${time(en)}`, sub: left < 90 ? `${left}m left` : null };
+  }
+  function hours(d) { const st = new Date(d.start); return d.showEnd ? `${time(st)} – ${time(new Date(d.end))}` : `from ${time(st)}`; }
+
+  let me = null; // { lat, lng }
+  let locState = "idle"; // idle | loading | gps | error
+  let locError = null;
+
+  function miles(s) {
+    if (!me || s.lat == null) return null;
+    const R = 3958.8, r = Math.PI / 180;
+    const dLat = (s.lat - me.lat) * r, dLng = (s.lng - me.lng) * r;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(me.lat * r) * Math.cos(s.lat * r) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+  const fmtMi = (m) => (m < 10 ? m.toFixed(1) : Math.round(m).toString());
+  const money = (v) => (v >= 1e6 ? `$${(v / 1e6).toFixed(v >= 1e7 ? 0 : 1)}M` : `$${Math.round(v / 1000)}k`);
+  const shortSqft = (v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k sf` : `${v} sf`);
+  const num = (v) => v.toLocaleString();
+
+  function pinLabel(s) {
+    const m = miles(s);
+    if (sort === "near" && m != null) return `${fmtMi(m)} mi`;
+    if (sort === "size" && s.sqft) return shortSqft(s.sqft);
+    if (s.value) return money(s.value);
+    if (s.sqft) return shortSqft(s.sqft);
+    return (s.city || "Sale").slice(0, 10);
+  }
+
+  const sales = DATA.sales || [];
+  const shown = { open: true, soon: true, na: true, closed: false };
+  let sort = store.get("sort") || "size";
+  let selected = null;
+
+  function visible() {
+    const list = sales.filter((s) => shown[status(s).k]);
+    const by = {
+      near: (a, b) => (miles(a) ?? 1e9) - (miles(b) ?? 1e9),
+      size: (a, b) => (b.sqft ?? -1) - (a.sqft ?? -1),
+      value: (a, b) => (b.value ?? -1) - (a.value ?? -1),
+      start: (a, b) => (new Date(dayOf(a)?.start ?? 8.64e15)) - (new Date(dayOf(b)?.start ?? 8.64e15)),
+    };
+    const key = sort === "near" && !me ? "size" : sort;
+    return list.sort(by[key]);
+  }
+
+  const pins = new Map();
+  const pinCache = new Map();
+  for (const s of sales) {
+    if (s.lat == null) continue;
+    const mk = L.marker([s.lat, s.lng], { title: s.name, riseOnHover: true, keyboard: true });
+    mk.on("click", (e) => { L.DomEvent.stopPropagation(e); select(s.id); });
+    pins.set(s.id, mk.addTo(map));
+  }
+
+  function drawPins() {
+    for (const s of sales) {
+      const mk = pins.get(s.id); if (!mk) continue;
+      const st = status(s).k;
+      const isVis = shown[st] || selected === s.id;
+      if (!isVis) { if (map.hasLayer(mk)) map.removeLayer(mk); continue; }
+      if (!map.hasLayer(mk)) mk.addTo(map);
+      const lbl = pinLabel(s);
+      const sig = `${st}|${lbl}`;
+      if (pinCache.get(s.id) !== sig) {
+        pinCache.set(s.id, sig);
+        const html = `<div class="pill-pin ${st}"><span class="dot"></span><span>${esc(lbl)}</span></div>`;
+        mk.setIcon(L.divIcon({ className: "pin-wrap", html, iconSize: [0, 0], iconAnchor: [0, 0] }));
+      }
+      const el = mk.getElement();
+      if (el) el.classList.toggle("sel", selected === s.id);
+      mk.setZIndexOffset(selected === s.id ? 1000 : st === "open" ? 200 : st === "soon" ? 100 : 0);
+    }
+  }
+
+  function mapPadding() {
+    const r = $("#sheet").getBoundingClientRect();
+    if (innerWidth >= 860) return { tl: [r.right + 44, 52], br: [64, 52] };
+    return { tl: [58, 76], br: [58, Math.max(40, innerHeight - r.top) + 36] };
+  }
+  function fitAll(animate = true) {
+    const pts = visible().filter((s) => s.lat != null).map((s) => [s.lat, s.lng]);
+    const all = pts.length ? pts : sales.filter((s) => s.lat != null).map((s) => [s.lat, s.lng]);
+    if (me) all.push([me.lat, me.lng]);
+    if (!all.length) return;
+    const p = mapPadding();
+    const opts = { paddingTopLeft: p.tl, paddingBottomRight: p.br, maxZoom: 13 };
+    if (animate) map.flyToBounds(all, { ...opts, duration: 0.55 });
+    else map.fitBounds(all, opts);
+  }
+  function focusSale(s) {
+    if (s.lat == null) return;
+    const p = mapPadding(), z = Math.max(map.getZoom(), 13);
+    const size = map.getSize();
+    const cx = (p.tl[0] + size.x - p.br[0]) / 2, cy = (p.tl[1] + size.y - p.br[1]) / 2;
+    const target = map.project([s.lat, s.lng], z).subtract([cx - size.x / 2, cy - size.y / 2]);
+    map.flyTo(map.unproject(target, z), z, { duration: 0.5 });
+  }
+
+  // ---------- location (Telegram native LocationManager -> browser Geolocation) ----------
+  let meMarker = null, geoWatchId = null, locTimeout = null;
+
+  function setPosition(lat, lng, explicit) {
+    clearTimeout(locTimeout);
+    me = { lat, lng };
+    locState = "gps";
+    locError = null;
+    const icon = L.divIcon({ className: "", html: '<div class="me-dot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
+    if (!meMarker) meMarker = L.marker([lat, lng], { icon, interactive: false, zIndexOffset: 1500 }).addTo(map);
+    else meMarker.setLatLng([lat, lng]);
+    if (explicit) { sort = "near"; store.set("sort", "near"); }
+    render();
+    if (explicit && !selected) fitAll(true);
+  }
+
+  function failLocation(info) {
+    clearTimeout(locTimeout);
+    locState = me ? "gps" : "error";
+    locError = info;
+    render();
+  }
+
+  function startWatch() {
+    if (geoWatchId != null || !("geolocation" in navigator)) return;
+    geoWatchId = navigator.geolocation.watchPosition((pos) => {
+      setPosition(pos.coords.latitude, pos.coords.longitude, false);
+    }, () => {}, { enableHighAccuracy: true, maximumAge: 15000, timeout: 25000 });
+  }
+
+  function browserLocate(explicit) {
+    if (!window.isSecureContext || !("geolocation" in navigator)) {
+      failLocation({ text: "Location isn't supported in this browser." });
+      return;
+    }
+    let settled = false;
+    clearTimeout(locTimeout);
+    locTimeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      failLocation({ text: "Location timed out. Check GPS and tap Retry." });
+    }, 12000);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (settled) return;
+        settled = true;
+        setPosition(pos.coords.latitude, pos.coords.longitude, explicit);
+        startWatch();
+      },
+      (err) => {
+        if (settled) return;
+        settled = true;
+        failLocation({
+          text: err.code === 1
+            ? "Location is blocked. Allow location access in site/app settings, then tap Retry."
+            : "Couldn't get a GPS fix right now. Try again outside.",
+        });
+      },
+      { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 }
+    );
+  }
+
+  function requestLocation(explicit) {
+    if (locState === "loading") return;
+    if (explicit && me) {
+      map.flyTo([me.lat, me.lng], Math.max(map.getZoom(), 12), { duration: 0.5 });
+      return;
+    }
+    locState = "loading";
+    locError = null;
+    renderTopButtons();
+
+    const lm = inTMA ? tg.LocationManager : null;
+    if (lm) {
+      const runTma = () => {
+        if (!lm.isLocationAvailable) { browserLocate(explicit); return; }
+        if (lm.isAccessRequested && !lm.isAccessGranted) {
+          failLocation({ text: "Location permission is turned off for this app in Telegram.", canSettings: true });
+          return;
+        }
+        let settled = false;
+        clearTimeout(locTimeout);
+        locTimeout = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          browserLocate(explicit);
+        }, 12000);
+        lm.getLocation((loc) => {
+          if (settled) return;
+          settled = true;
+          if (loc && loc.latitude != null && loc.longitude != null) {
+            setPosition(loc.latitude, loc.longitude, explicit);
+          } else if (lm.isAccessRequested && !lm.isAccessGranted) {
+            failLocation({ text: "Location permission was denied in Telegram.", canSettings: true });
+          } else {
+            browserLocate(explicit);
+          }
+        });
+      };
+      if (lm.isInited) runTma();
+      else lm.init(runTma);
+      return;
+    }
+    browserLocate(explicit);
+  }
+
+  // ---------- icons & rendering ----------
+  const ICONS = {
+    locate: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22"/></svg>`,
+    spin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg>`,
+    chevR: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`,
+    chevL: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>`,
+    house: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg>`,
+    nav: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>`,
+  };
+  const LABEL = { open: "Open", soon: "Later", closed: "Closed", na: "No hours" };
+  function counts() { const c = { open: 0, soon: 0, closed: 0, na: 0 }; for (const s of sales) c[status(s).k]++; return c; }
+
+  function renderTopButtons() {
+    const isLoad = locState === "loading";
+    const isGps = Boolean(me);
+    const label = isLoad ? "Locating…" : isGps ? "Near me" : "Locate";
+    const html = `${isLoad ? ICONS.spin : ICONS.locate}<span>${label}</span>`;
+    for (const id of ["#m-locate", "#d-locate"]) {
+      const b = $(id); if (!b) continue;
+      b.innerHTML = html;
+      b.classList.toggle("loading", isLoad);
+      b.classList.toggle("active", isGps);
+    }
+  }
+
+  function renderHeaders() {
+    const dayStr = dFmt.format(pageDay);
+    const gen = new Date(DATA.generated);
+    const genStr = ymd(gen) === DATA.date || ymd(gen) === ymd(new Date()) ? time(gen) : dFmt.format(gen);
+    $("#m-title").textContent = dayStr;
+    $("#m-cnt").textContent = `${sales.length} ${sales.length === 1 ? "sale" : "sales"}`;
+    $("#d-title").textContent = dayStr;
+    $("#d-meta").textContent = `${sales.length} sales · updated ${genStr}`;
+    renderTopButtons();
+  }
+
+  function renderTop() {
+    if (selected) {
+      const list = visible(), i = list.findIndex((s) => s.id === selected);
+      $("#top").innerHTML = `<div class="dnav">
+        <button class="back" id="back">${ICONS.chevL}All sales</button>
+        ${i >= 0 ? `<span class="pos">${i + 1} / ${list.length}</span>
+        <button class="step" id="prev" aria-label="Previous sale" ${i <= 0 ? "disabled" : ""}>${ICONS.chevL}</button>
+        <button class="step" id="next" aria-label="Next sale" ${i >= list.length - 1 ? "disabled" : ""}>${ICONS.chevR}</button>` : ""}
+      </div>`;
+      $("#back").onclick = closeDetail;
+      if (i >= 0) {
+        $("#prev").onclick = () => select(list[i - 1].id);
+        $("#next").onclick = () => select(list[i + 1].id);
+      }
+      return;
+    }
+    const c = counts();
+    const nonZero = ["open", "soon", "closed", "na"].filter((k) => c[k] > 0);
+    let leftHtml = "";
+    if (nonZero.length > 1) {
+      leftHtml = `<div class="chips" role="group" aria-label="Filter by status">` + nonZero.map((k) =>
+        `<button class="chip" data-k="${k}" aria-pressed="${shown[k]}"><span class="dot" style="background:var(--${k})"></span>${LABEL[k]} <span class="n">${c[k]}</span></button>`
+      ).join("") + `</div>`;
+    } else if (nonZero.length === 1) {
+      const k = nonZero[0];
+      const phrase = k === "open" ? "open now" : k === "soon" ? "opening later" : k === "closed" ? "ended" : "listed";
+      leftHtml = `<span class="summary-tag"><span class="dot" style="background:var(--${k})"></span>${c[k]} ${phrase}</span>`;
+    } else {
+      leftHtml = `<span class="summary-tag">No sales</span>`;
+    }
+
+    $("#top").innerHTML = `<div class="toolbar">${leftHtml}<span class="sort-wrap"><select class="sort" id="sort" aria-label="Sort sales">
+      <option value="size">Biggest</option>
+      <option value="value">Value</option>
+      <option value="near">Nearest${me ? "" : " (GPS)"}</option>
+      <option value="start">Opens first</option>
+    </select></span></div>`;
+    $("#sort").value = sort === "near" && !me ? "size" : sort;
+    $("#sort").onchange = (e) => {
+      const next = e.target.value;
+      if (next === "near" && !me) { requestLocation(true); return; }
+      sort = next; store.set("sort", sort); render();
+    };
+    for (const b of document.querySelectorAll(".chip")) {
+      b.onclick = () => { shown[b.dataset.k] = !shown[b.dataset.k]; render(); };
+    }
+  }
+
+  function facts(s) {
+    const f = [];
+    const m = miles(s);
+    if (m != null) f.push(`<span class="mi">${fmtMi(m)} mi</span>`);
+    if (s.value) f.push(`<span>${money(s.value)}</span>`);
+    if (s.sqft) f.push(`<span>${num(s.sqft)} sf</span>`);
+    if (s.year) f.push(`<span>${s.year}</span>`);
+    return f.join("");
+  }
+
+  function renderNotice() {
+    if (!locError) return "";
+    return `<div class="notice">
+      <p>${esc(locError.text)}</p>
+      <div class="notice-acts">
+        ${locError.canSettings ? `<button class="nbtn primary" id="n-settings">Open Telegram Settings</button>` : ""}
+        <button class="nbtn ${locError.canSettings ? "" : "primary"}" id="n-retry">Retry GPS</button>
+      </div>
+    </div>`;
+  }
+
+  function renderList() {
+    const list = visible();
+    if (!sales.length) { $("#body").innerHTML = `<p class="empty">No estate sales were found for this day.</p>`; return; }
+    let html = renderNotice();
+    if (!list.length) {
+      html += `<p class="empty">All ${sales.length} sales are hidden by filters.<br><button id="showall">Show all sales</button></p>`;
+    } else {
+      html += list.map((s) => {
+        const st = status(s);
+        const live = st.k === "open" ? `<span class="live">${esc(st.label)}</span>` : esc(st.label);
+        return `<button class="row" data-id="${s.id}">
+          <span class="thumb">
+            ${s.photo ? `<img src="${esc(s.photo)}" alt="" loading="lazy" decoding="async">` : ICONS.house}
+            <span class="sdot" style="background:var(--${st.k})"></span>
+          </span>
+          <span class="row-main">
+            <h2>${esc(s.name)}</h2>
+            <div class="sub">${esc(s.city)} · ${live}</div>
+            ${facts(s) ? `<div class="facts">${facts(s)}</div>` : ""}
+          </span>
+          <span class="chev">${ICONS.chevR}</span>
+        </button>`;
+      }).join("");
+    }
+    $("#body").innerHTML = html;
+    $("#n-settings")?.addEventListener("click", () => tg?.LocationManager?.openSettings?.());
+    $("#n-retry")?.addEventListener("click", () => requestLocation(true));
+    $("#showall")?.addEventListener("click", () => { for (const k in shown) shown[k] = true; render(); });
+    for (const r of document.querySelectorAll(".row")) r.onclick = () => select(+r.dataset.id);
+  }
+
+  function openExternal(url) {
+    if (inTMA && tg.openLink) tg.openLink(url);
+    else window.open(url, "_blank", "noopener");
+  }
+
+  function renderDetail(s) {
+    const st = status(s), m = miles(s);
+    const dest = encodeURIComponent(s.address || `${s.lat},${s.lng}`);
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
+    const zillow = s.address ? `https://www.zillow.com/homes/${encodeURIComponent(s.address)}_rb/` : null;
+    const cells = [
+      s.value && ["County value", `$${num(s.value)}`],
+      s.sqft && ["Living area", `${num(s.sqft)} sqft`],
+      s.lot && ["Lot size", s.lot >= 21780 ? `${(s.lot / 43560).toFixed(2)} ac` : `${num(s.lot)} sqft`],
+      s.year && ["Year built", s.year],
+      (s.beds || s.baths) && ["Beds / baths", `${s.beds ?? "?"} / ${s.baths ?? "?"}`],
+      s.lastSale && ["Last sold", s.lastSale, true],
+    ].filter(Boolean);
+    const today = ymd(new Date());
+
+    $("#body").innerHTML = `<article class="detail">
+      <a class="hero" href="${esc(s.url)}" data-ext="1" target="_blank" rel="noopener">
+        ${s.photo ? `<img src="${esc(s.photo)}" alt="">` : ""}
+        ${s.pictures ? `<span class="count">${s.pictures} photos</span>` : ""}
+      </a>
+      <h2>${esc(s.name)}</h2>
+      <div class="meta-pills">
+        <span class="mpill"><span class="dot" style="background:var(--${st.k})"></span>${esc(st.label)}${st.sub ? ` · ${esc(st.sub)}` : ""}</span>
+        ${m != null ? `<span class="mpill dist">${fmtMi(m)} mi away</span>` : ""}
+      </div>
+      ${s.address
+        ? `<button class="addr-btn" id="copy-addr"><span>${esc(s.address)}</span><span id="copy-lbl">Copy</span></button>`
+        : `<div class="addr-btn" style="cursor:default"><span>Address not posted yet · ${esc(s.city)}</span><span></span></div>`}
+      <div class="actions">
+        <a class="btn primary" href="${esc(mapsUrl)}" data-ext="1" target="_blank" rel="noopener">${ICONS.nav}Directions</a>
+        <a class="btn" href="${esc(s.url)}" data-ext="1" target="_blank" rel="noopener">Listing</a>
+        ${zillow ? `<a class="btn" href="${esc(zillow)}" data-ext="1" target="_blank" rel="noopener">Zillow</a>` : `<span class="btn disabled">Zillow</span>`}
+      </div>
+      ${cells.length ? `<h3 class="sec">House record <small>· county parcel</small></h3>
+        <dl class="grid">${cells.map(([k, v, t]) => `<div><dt>${k}</dt><dd class="${t ? "txt" : ""}">${esc(v)}</dd></div>`).join("")}</dl>`
+        : `<p class="host" style="margin-bottom:16px">No county parcel record matched this address.</p>`}
+      ${s.days.length ? `<h3 class="sec">Sale hours</h3><ul class="days">${s.days.map((d) => {
+        const day = ymd(new Date(d.start));
+        return `<li class="${day === DATA.date ? "today" : day < today ? "past" : ""}"><span>${dFmt.format(new Date(d.start))}</span><span>${hours(d)}</span></li>`;
+      }).join("")}</ul>` : ""}
+      <p class="host">Hosted by ${esc(s.org || "an independent seller")}</p>
+    </article>`;
+    $("#body").scrollTop = 0;
+
+    $("#copy-addr")?.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(s.address); $("#copy-lbl").textContent = "Copied"; setTimeout(() => { if ($("#copy-lbl")) $("#copy-lbl").textContent = "Copy"; }, 1400); } catch {}
+    });
+    for (const a of document.querySelectorAll("a[data-ext]")) {
+      a.onclick = (e) => { if (inTMA && tg.openLink) { e.preventDefault(); openExternal(a.href); } };
+    }
+  }
+
+  function render() {
+    renderHeaders();
+    renderTop();
+    const s = selected && sales.find((x) => x.id === selected);
+    if (s) renderDetail(s); else renderList();
+    drawPins();
+  }
+
+  function select(id) {
+    const s = sales.find((x) => x.id === id); if (!s) return;
+    selected = id;
+    if (innerWidth < 860 && snap === "peek") setSnap("mid");
+    if (inTMA) { tg.BackButton?.show?.(); tg.HapticFeedback?.selectionChanged?.(); }
+    render();
+    requestAnimationFrame(() => focusSale(s));
+  }
+  function closeDetail() {
+    if (!selected) return;
+    selected = null;
+    if (inTMA) tg.BackButton?.hide?.();
+    render();
+  }
+  if (inTMA) tg.BackButton?.onClick?.(closeDetail);
+  map.on("click", closeDetail);
+
+  for (const id of ["#m-fit", "#d-fit"]) $(id).onclick = () => fitAll(true);
+  for (const id of ["#m-locate", "#d-locate"]) $(id).onclick = () => requestLocation(true);
+  setInterval(render, 60000);
+
+  if (!isToday()) shown.closed = true;
+  else if (!sales.some((s) => ["open", "soon"].includes(status(s).k))) shown.closed = true;
+  render();
+  requestAnimationFrame(() => fitAll(false));
+
+  if (inTMA && tg.LocationManager) {
+    tg.LocationManager.init(() => {
+      if (tg.LocationManager.isLocationAvailable && tg.LocationManager.isAccessGranted) requestLocation(false);
+    });
+  } else if (window.isSecureContext && navigator.permissions?.query) {
+    navigator.permissions.query({ name: "geolocation" }).then((p) => {
+      if (p.state === "granted") requestLocation(false);
+    }).catch(() => {});
+  }
+}
+
+fetchData().then(startApp).catch((err) => {
+  $("#body").innerHTML = `<p class="empty">${esc(err.message || "Failed to load estate sales.")}</p>`;
+});
+</script>
+</body>
+</html>
