@@ -23,6 +23,8 @@
   --muted: #5f6b7a;
   --accent: #1a73e8;
   --accent-soft: rgba(26, 115, 232, 0.12);
+  --match: #059669;
+  --match-soft: rgba(5, 150, 105, 0.13);
   --open: #16a34a;
   --soon: #ea580c;
   --closed: #64748b;
@@ -46,6 +48,8 @@
     --muted: #94a3b8;
     --accent: #3b82f6;
     --accent-soft: rgba(59, 130, 246, 0.2);
+    --match: #10b981;
+    --match-soft: rgba(16, 185, 129, 0.18);
     --open: #22c55e;
     --soon: #fb923c;
     --closed: #94a3b8;
@@ -65,6 +69,8 @@
   --muted: #94a3b8;
   --accent: #3b82f6;
   --accent-soft: rgba(59, 130, 246, 0.2);
+  --match: #10b981;
+  --match-soft: rgba(16, 185, 129, 0.18);
   --open: #22c55e;
   --soon: #fb923c;
   --closed: #94a3b8;
@@ -87,7 +93,7 @@ a { color: inherit; text-decoration: none; }
 .leaflet-bar { border: 1px solid var(--line) !important; border-radius: 12px !important; overflow: hidden; box-shadow: var(--shadow-sm) !important; }
 .leaflet-bar a { background: var(--surface) !important; color: var(--ink) !important; border-color: var(--line) !important; width: 36px !important; height: 36px !important; line-height: 36px !important; }
 
-/* Google-Maps style crisp pill pins (high contrast against bright Google map) */
+/* Google-Maps style pill pins */
 .pin-wrap { background: none; border: 0; }
 .pill-pin {
   position: relative; display: inline-flex; align-items: center; gap: 5px;
@@ -102,11 +108,14 @@ a { color: inherit; text-decoration: none; }
   background: inherit; border-right: 1.5px solid rgba(15, 23, 42, 0.16); border-bottom: 1.5px solid rgba(15, 23, 42, 0.16);
   transform: translateX(-50%) rotate(45deg);
 }
+.pill-pin.matched { background: #059669; color: #ffffff; border-color: #ffffff; }
+.pill-pin.matched::after { border-color: #ffffff; }
 .pill-pin .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--na); }
 .pill-pin.open .dot { background: #16a34a; }
 .pill-pin.soon .dot { background: #ea580c; }
 .pill-pin.closed { opacity: 0.72; }
 .pill-pin.closed .dot { background: #64748b; }
+.pill-pin.matched .dot { background: #fde047; }
 .pin-wrap.sel { z-index: 1000 !important; }
 .pin-wrap.sel .pill-pin {
   background: #1a73e8; color: #ffffff; border-color: #ffffff;
@@ -126,37 +135,46 @@ a { color: inherit; text-decoration: none; }
 /* Top bar */
 .topbar {
   position: fixed; top: calc(10px + var(--safe-t)); left: 10px; right: 10px; z-index: 500;
-  display: flex; align-items: center; gap: 6px; pointer-events: none;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; pointer-events: none;
 }
 .topbar > * { pointer-events: auto; }
 .pill-bar {
-  display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 12px;
+  display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px;
   border-radius: 999px; background: var(--surface-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--line); box-shadow: var(--shadow-sm); min-width: 0;
 }
 .pill-bar h1 { font-size: 13.5px; font-weight: 700; white-space: nowrap; }
 .pill-bar .cnt { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; }
 
+.match-filter {
+  display: none; align-items: center; gap: 4px; height: 38px; padding: 0 11px;
+  border-radius: 999px; background: var(--surface-glass); backdrop-filter: blur(12px);
+  border: 1.5px solid var(--match); color: var(--match); box-shadow: var(--shadow-sm);
+  font-size: 12.5px; font-weight: 700; white-space: nowrap;
+}
+.match-filter.show { display: inline-flex; }
+.match-filter.on { background: var(--match); color: #fff; }
+
 .sort-pill {
-  margin-left: auto; height: 40px; padding: 0 28px 0 12px; border-radius: 999px;
+  margin-left: auto; height: 38px; padding: 0 26px 0 11px; border-radius: 999px;
   background: var(--surface-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--line); box-shadow: var(--shadow-sm);
-  font-size: 13px; font-weight: 600; color: var(--ink);
+  font-size: 12.5px; font-weight: 600; color: var(--ink);
   appearance: none; -webkit-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235f6b7a' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 11px center;
+  background-repeat: no-repeat; background-position: right 10px center;
 }
 .mode-btn {
-  display: inline-flex; align-items: center; gap: 5px; height: 40px; padding: 0 13px;
+  display: inline-flex; align-items: center; gap: 5px; height: 38px; padding: 0 12px;
   border-radius: 999px; background: var(--surface-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--line); box-shadow: var(--shadow-sm);
-  font-size: 13px; font-weight: 700; white-space: nowrap;
+  font-size: 12.5px; font-weight: 700; white-space: nowrap;
 }
-.mode-btn svg { width: 16px; height: 16px; }
+.mode-btn svg { width: 15px; height: 15px; }
 
-/* Floating GPS / error toast under topbar */
+/* Geo toast */
 .geo-toast {
-  position: fixed; top: calc(58px + var(--safe-t)); left: 10px; right: 10px; z-index: 490;
+  position: fixed; top: calc(56px + var(--safe-t)); left: 10px; right: 10px; z-index: 490;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 9px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line);
   box-shadow: var(--shadow-md); font-size: 12.5px; color: var(--muted);
@@ -166,9 +184,9 @@ a { color: inherit; text-decoration: none; }
 .tbtn { height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 700; background: var(--wash); color: var(--ink); }
 .tbtn.primary { background: var(--accent); color: #fff; }
 
-/* Right-side Google-Maps style floating map buttons */
+/* Right-side floating map buttons */
 .map-fabs {
-  position: fixed; right: 12px; bottom: calc(164px + var(--safe-b)); z-index: 450;
+  position: fixed; right: 12px; bottom: calc(174px + var(--safe-b)); z-index: 450;
   display: flex; flex-direction: column; gap: 8px; transition: bottom 0.2s ease;
 }
 body.cards-hidden .map-fabs { bottom: calc(74px + var(--safe-b)); }
@@ -182,7 +200,14 @@ body.cards-hidden .map-fabs { bottom: calc(74px + var(--safe-b)); }
 .fab.loading svg { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Bottom horizontal swipeable preview carousel (Map view) */
+/* Match tags */
+.mtags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.mtag {
+  display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 999px;
+  background: var(--match-soft); color: var(--match); font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+
+/* Bottom swipeable preview carousel */
 .carousel-wrap {
   position: fixed; left: 0; right: 0; bottom: calc(12px + var(--safe-b)); z-index: 500;
   transition: transform 0.22s ease, opacity 0.22s ease;
@@ -194,7 +219,7 @@ body.cards-hidden .carousel-wrap { transform: translateY(130%); opacity: 0; poin
 }
 .carousel::-webkit-scrollbar { display: none; }
 .pcard {
-  flex: 0 0 calc(100% - 28px); max-width: 420px; scroll-snap-align: center;
+  flex: 0 0 calc(100% - 28px); max-width: 430px; scroll-snap-align: center;
   background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
   box-shadow: var(--shadow-md); padding: 11px; display: grid; grid-template-columns: 92px 1fr; gap: 11px;
   align-items: center; text-align: left;
@@ -209,7 +234,7 @@ body.cards-hidden .carousel-wrap { transform: translateY(130%); opacity: 0; poin
   position: absolute; top: 6px; left: 6px; width: 10px; height: 10px; border-radius: 50%;
   border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
-.pbody { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pbody { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ptop { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
 .pmi {
   padding: 2px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
@@ -219,13 +244,14 @@ body.cards-hidden .carousel-wrap { transform: translateY(130%); opacity: 0; poin
 .pst.live { color: var(--open); }
 .pidx { margin-left: auto; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
 .pcard h2 {
-  font-size: 14.5px; font-weight: 700; line-height: 1.22; letter-spacing: -0.01em;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: 14px; font-weight: 700; line-height: 1.22; letter-spacing: -0.01em;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
 }
+.psum { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pbot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 3px; }
-.pfacts { font-size: 12.5px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pfacts { font-size: 12px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pdir {
-  display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 11px;
+  display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px;
   border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; flex: none;
 }
 
@@ -238,7 +264,7 @@ body.cards-hidden .carousel-wrap { transform: translateY(130%); opacity: 0; poin
 }
 body.cards-hidden .reopen-pill { display: inline-flex; }
 
-/* Full-screen List overlay (mobile) / Left Sidebar (desktop) */
+/* List panel */
 .list-panel {
   position: fixed; inset: 0; z-index: 600; background: var(--surface);
   display: none; flex-direction: column; padding-top: var(--safe-t); padding-bottom: var(--safe-b);
@@ -250,7 +276,6 @@ body.view-list .list-panel { display: flex; }
 }
 .lhead h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
 .lhead .sub { font-size: 12px; color: var(--muted); }
-.lacts { display: flex; align-items: center; gap: 6px; }
 .lbar {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 8px 14px; border-bottom: 1px solid var(--line); flex: none;
@@ -262,25 +287,28 @@ body.view-list .list-panel { display: flex; }
   border-radius: 999px; border: 1px solid var(--line); font-size: 12.5px; font-weight: 600; white-space: nowrap;
 }
 .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
-.chip[aria-pressed="false"] { opacity: 0.45; border-style: dashed; }
+.chip.match-chip { border-color: var(--match); color: var(--match); }
+.chip.match-chip[aria-pressed="true"] { background: var(--match); color: #fff; }
+.chip[aria-pressed="false"] { opacity: 0.5; border-style: dashed; }
 .lscroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
 
 .lrow {
-  display: grid; grid-template-columns: 68px 1fr auto; gap: 12px; align-items: center;
+  display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; align-items: center;
   width: 100%; text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line);
 }
 .lrow:active, .lrow:hover { background: var(--wash); }
 .lrow .thumb {
-  position: relative; width: 68px; height: 68px; border-radius: 12px; overflow: hidden;
+  position: relative; width: 72px; height: 72px; border-radius: 12px; overflow: hidden;
   background: var(--wash); border: 1px solid var(--line); display: grid; place-items: center; color: var(--muted);
 }
 .lrow .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .lrow .thumb .sdot { position: absolute; top: 5px; left: 5px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff; }
 .lrow-main { min-width: 0; }
 .lrow h2 { font-size: 14.5px; font-weight: 600; line-height: 1.24; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.lrow .sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lrow .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lrow .sub .live { color: var(--open); font-weight: 600; }
-.lrow .facts { font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 0; }
+.lrow .lsum { font-size: 12px; color: var(--muted); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.lrow .facts { font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px 0; }
 .lrow .facts span + span::before { content: "·"; margin: 0 6px; color: var(--muted); font-weight: 400; }
 .lrow .facts .mi { color: var(--accent); }
 .lrow .dir-ic {
@@ -295,7 +323,7 @@ body.view-list .list-panel { display: flex; }
 }
 .detail-backdrop.open { display: flex; }
 .detail-sheet {
-  width: 100%; max-width: 540px; max-height: 88dvh; background: var(--surface);
+  width: 100%; max-width: 560px; max-height: 90dvh; background: var(--surface);
   border-radius: 22px 22px 0 0; border-top: 1px solid var(--line); box-shadow: var(--shadow-md);
   display: flex; flex-direction: column; overflow: hidden; padding-bottom: var(--safe-b);
 }
@@ -311,7 +339,7 @@ body.view-list .list-panel { display: flex; }
 .dnav .step { width: 34px; height: 34px; border-radius: 50%; background: var(--wash); display: grid; place-items: center; }
 .dnav .step:disabled { opacity: 0.3; cursor: default; }
 
-.dscroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 24px; }
+.dscroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 28px; }
 .hero {
   display: block; position: relative; border-radius: 14px; overflow: hidden;
   background: var(--wash); aspect-ratio: 16 / 9; margin-bottom: 14px; border: 1px solid var(--line);
@@ -342,6 +370,54 @@ body.view-list .list-panel { display: flex; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 .btn.disabled { opacity: 0.4; pointer-events: none; }
 
+/* AI inventory summary + watchlist match gallery */
+.summary-box {
+  padding: 12px 13px; border-radius: 13px; background: var(--wash); border: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+.summary-box p { font-size: 13.5px; line-height: 1.4; color: var(--ink); }
+.cat-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.cat-chip { padding: 3px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 11.5px; font-weight: 600; color: var(--muted); }
+
+.match-group { margin-bottom: 16px; }
+.mg-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.mg-title { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--match); }
+.mg-cnt { font-size: 12px; color: var(--muted); font-weight: 600; }
+.mstrip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.mstrip::-webkit-scrollbar { display: none; }
+.mshot {
+  position: relative; flex: 0 0 112px; height: 112px; border-radius: 12px; overflow: hidden;
+  border: 1.5px solid var(--match); background: var(--wash); padding: 0;
+}
+.mshot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mshot .conf {
+  position: absolute; right: 5px; bottom: 5px; padding: 2px 6px; border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8); color: #fff; font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+
+/* Full-res photo lightbox */
+.lightbox {
+  position: fixed; inset: 0; z-index: 900; background: rgba(0, 0, 0, 0.94);
+  display: none; flex-direction: column; padding-top: var(--safe-t); padding-bottom: var(--safe-b);
+}
+.lightbox.open { display: flex; }
+.lb-top {
+  display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; color: #fff;
+}
+.lb-cap { font-size: 14px; font-weight: 700; }
+.lb-close {
+  height: 36px; padding: 0 14px; border-radius: 999px; background: rgba(255,255,255,0.16);
+  color: #fff; font-size: 13px; font-weight: 700;
+}
+.lb-stage { flex: 1; display: grid; place-items: center; padding: 8px 12px; min-height: 0; }
+.lb-stage img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; }
+.lb-nav { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 12px 16px 18px; color: #fff; }
+.lb-btn {
+  height: 40px; padding: 0 18px; border-radius: 999px; background: rgba(255,255,255,0.16);
+  color: #fff; font-size: 13.5px; font-weight: 700;
+}
+.lb-btn:disabled { opacity: 0.3; }
+
 .sec { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 8px; }
 .grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line);
@@ -359,18 +435,18 @@ body.view-list .list-panel { display: flex; }
 .empty { padding: 36px 20px; text-align: center; color: var(--muted); }
 .empty button { margin-top: 10px; padding: 8px 14px; border-radius: 999px; background: var(--wash); color: var(--ink); font-weight: 700; }
 
-/* Desktop: permanent left sidebar + full map */
+/* Desktop sidebar */
 @media (min-width: 860px) {
   .topbar, .carousel-wrap, .reopen-pill { display: none !important; }
   .geo-toast { left: 428px; top: 14px; right: 76px; }
   .list-panel {
-    display: flex !important; top: 14px; left: 14px; bottom: 14px; right: auto; width: 400px;
+    display: flex !important; top: 14px; left: 14px; bottom: 14px; right: auto; width: 410px;
     border-radius: 20px; border: 1px solid var(--line); box-shadow: var(--shadow-md); padding: 0;
   }
   .lhead .mode-btn { display: none; }
   .map-fabs { right: 16px; bottom: 28px !important; }
-  .detail-backdrop { left: 414px; align-items: center; padding: 20px; }
-  .detail-sheet { border-radius: 20px; max-height: 85dvh; border: 1px solid var(--line); }
+  .detail-backdrop { left: 424px; align-items: center; padding: 20px; }
+  .detail-sheet { border-radius: 20px; max-height: 86dvh; border: 1px solid var(--line); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -385,8 +461,10 @@ body.view-list .list-panel { display: flex; }
     <h1 id="m-title">Estate Sales</h1>
     <span class="cnt" id="m-cnt"></span>
   </div>
+  <button class="match-filter" id="m-match" aria-pressed="false"></button>
   <select class="sort-pill" id="m-sort" aria-label="Sort sales">
     <option value="near">Nearest</option>
+    <option value="match">Matches</option>
     <option value="size">Biggest</option>
     <option value="value">Value</option>
     <option value="start">Opens</option>
@@ -422,12 +500,10 @@ body.view-list .list-panel { display: flex; }
       <h1 id="l-title">Estate Sales</h1>
       <div class="sub" id="l-sub">Loading…</div>
     </div>
-    <div class="lacts">
-      <button class="mode-btn" id="close-list">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-        <span>Map</span>
-      </button>
-    </div>
+    <button class="mode-btn" id="close-list">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      <span>Map</span>
+    </button>
   </div>
   <div class="lbar" id="lbar"></div>
   <div class="lscroll" id="lscroll"><p class="empty">Loading estate sales…</p></div>
@@ -437,6 +513,19 @@ body.view-list .list-panel { display: flex; }
   <div class="detail-sheet" id="detail-sheet">
     <div class="dnav" id="dnav"></div>
     <div class="dscroll" id="dscroll"></div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <div class="lb-top">
+    <span class="lb-cap" id="lb-cap"></span>
+    <button class="lb-close" id="lb-close">✕ Close</button>
+  </div>
+  <div class="lb-stage"><img id="lb-img" alt=""></div>
+  <div class="lb-nav">
+    <button class="lb-btn" id="lb-prev">◀ Prev</button>
+    <span id="lb-pos" style="font-variant-numeric:tabular-nums;font-weight:700"></span>
+    <button class="lb-btn" id="lb-next">Next ▶</button>
   </div>
 </div>
 
@@ -450,12 +539,7 @@ if (inTMA) {
 
 const $ = (s) => document.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const store = {
-  get(k) { try { return localStorage.getItem("estate." + k); } catch { return null; } },
-  set(k, v) { try { localStorage.setItem("estate." + k, v); } catch {} },
-};
 
-// ---------- theme (UI adapts cleanly; map stays crisp Google Maps!) ----------
 const darkMQ = matchMedia("(prefers-color-scheme: dark)");
 function applyTheme() {
   const dark = inTMA && (tg.colorScheme === "dark" || tg.colorScheme === "light") ? tg.colorScheme === "dark" : darkMQ.matches;
@@ -465,7 +549,6 @@ darkMQ.addEventListener?.("change", applyTheme);
 if (inTMA) tg.onEvent?.("themeChanged", applyTheme);
 applyTheme();
 
-// ---------- Google Maps tiles (roadmap + hybrid satellite with full street labels) ----------
 const GMAPS = {
   road: "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&scale=2",
   hybrid: "https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&scale=2",
@@ -473,13 +556,11 @@ const GMAPS = {
 const map = L.map("map", { zoomControl: false, attributionControl: false, zoomSnap: 0.25 }).setView([28.54, -81.38], 10.5);
 L.control.attribution({ position: "bottomleft", prefix: false }).addTo(map);
 let satMode = false;
-const tileLayer = L.tileLayer(GMAPS.road, {
-  subdomains: "0123", maxZoom: 20, attribution: "Map data &copy; Google",
-}).addTo(map);
+const tileLayer = L.tileLayer(GMAPS.road, { subdomains: "0123", maxZoom: 20, attribution: "Map data &copy; Google" }).addTo(map);
 if (matchMedia("(min-width: 860px)").matches) L.control.zoom({ position: "topright" }).addTo(map);
 
-// ---------- load & decrypt sales.enc from secret GitHub Gist ----------
 const OWNER_HASH = "aef23a3e9453b131882b6553c7e0c548f09facdf28b75558cff04ca6dafd3201";
+const URL_PARAMS = new URLSearchParams(location.search);
 
 function b64uToBytes(s) {
   const b = s.replace(/-/g, "+").replace(/_/g, "/");
@@ -496,9 +577,8 @@ async function fetchData() {
   if (!inTMA || !uid || (await sha256Hex(String(uid))) !== OWNER_HASH) {
     throw new Error("🔒 Private — open this map from your Telegram bot.");
   }
-  const q = new URLSearchParams(location.search);
   const h = new URLSearchParams(location.hash.replace(/^#/, ""));
-  const g = q.get("g"), u = q.get("u"), c = q.get("c"), k = q.get("k") || h.get("k");
+  const g = URL_PARAMS.get("g"), u = URL_PARAMS.get("u"), c = URL_PARAMS.get("c"), k = URL_PARAMS.get("k") || h.get("k");
   if (!g || !k) throw new Error("Missing map link or key. Send .e in Telegram.");
 
   let raw = null;
@@ -523,7 +603,6 @@ async function fetchData() {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
-// ---------- main app ----------
 function startApp(DATA) {
   const tFmt = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" });
   const dFmt = new Intl.DateTimeFormat([], { weekday: "short", month: "short", day: "numeric" });
@@ -532,23 +611,26 @@ function startApp(DATA) {
   const pageDay = new Date(DATA.date + "T12:00:00");
   const isToday = () => ymd(new Date()) === DATA.date;
 
-  function dayOf(s) { return s.days.find((d) => ymd(new Date(d.start)) === DATA.date); }
+  function dayOf(s) {
+    if (DATA.upcomingMode) {
+      const now = new Date();
+      return s.days.find((d) => new Date(d.end) > now) || s.days[0];
+    }
+    return s.days.find((d) => ymd(new Date(d.start)) === DATA.date);
+  }
   function status(s) {
     const d = dayOf(s);
     if (!d) return { k: "na", label: "Hours TBA" };
     const now = new Date(), st = new Date(d.start), en = new Date(d.end);
     if (d.showEnd && now >= en) return { k: "closed", label: ymd(now) === DATA.date ? `Closed ${time(en)}` : "Ended" };
-    if (now < st) return { k: "soon", label: ymd(now) === DATA.date ? `Opens ${time(st)}` : `Opens ${dFmt.format(st)}, ${time(st)}` };
+    if (now < st) return { k: "soon", label: ymd(st) === ymd(now) ? `Opens ${time(st)}` : `${dFmt.format(st)}, ${time(st)}` };
     if (!d.showEnd) return { k: "open", label: `Open · since ${time(st)}` };
     const left = Math.round((en - now) / 60000);
     return { k: "open", label: `Open · closes ${time(en)}`, sub: left < 90 ? `${left}m left` : null };
   }
   function hours(d) { const st = new Date(d.start); return d.showEnd ? `${time(st)} – ${time(new Date(d.end))}` : `from ${time(st)}`; }
 
-  let me = null;
-  let locState = "idle"; // idle | loading | gps | error
-  let locError = null;
-
+  let me = null, locState = "idle", locError = null;
   function miles(s) {
     if (!me || s.lat == null) return null;
     const R = 3958.8, r = Math.PI / 180;
@@ -560,20 +642,27 @@ function startApp(DATA) {
   const money = (v) => (v >= 1e6 ? `$${(v / 1e6).toFixed(v >= 1e7 ? 0 : 1)}M` : `$${Math.round(v / 1000)}k`);
   const shortSqft = (v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k sf` : `${v} sf`);
   const num = (v) => v.toLocaleString();
+  const hasMatches = (s) => Boolean(s.matches && Object.keys(s.matches).length);
+  const matchCount = (s) => s.matches ? Object.values(s.matches).reduce((a, b) => a + b.length, 0) : 0;
 
   const sales = DATA.sales || [];
   const shown = { open: true, soon: true, na: true, closed: false };
-  // Default to Nearest so location-pulled distances lead the experience.
+  let onlyMatches = false;
   let sort = "near";
-  let activeId = null;     // highlighted pin / carousel card
-  let detailId = null;     // open detail modal
+  let activeId = null;
+  let detailId = null;
   let listOpen = false;
   let scrollingProgrammatically = false;
 
+  // Lightbox state
+  let lbItems = []; // [{ full, cap }]
+  let lbIdx = 0;
+
   function visible() {
-    const list = sales.filter((s) => shown[status(s).k]);
+    const list = sales.filter((s) => shown[status(s).k] && (!onlyMatches || hasMatches(s)));
     const by = {
       near: (a, b) => (miles(a) ?? 1e9) - (miles(b) ?? 1e9),
+      match: (a, b) => (matchCount(b) - matchCount(a)) || ((miles(a) ?? 1e9) - (miles(b) ?? 1e9)),
       size: (a, b) => (b.sqft ?? -1) - (a.sqft ?? -1),
       value: (a, b) => (b.value ?? -1) - (a.value ?? -1),
       start: (a, b) => (new Date(dayOf(a)?.start ?? 8.64e15)) - (new Date(dayOf(b)?.start ?? 8.64e15)),
@@ -584,14 +673,14 @@ function startApp(DATA) {
 
   function pinLabel(s) {
     const m = miles(s);
-    if (sort === "near" && m != null) return `${fmtMi(m)} mi`;
-    if (sort === "size" && s.sqft) return shortSqft(s.sqft);
-    if (s.value) return money(s.value);
-    if (s.sqft) return shortSqft(s.sqft);
-    return (s.city || "Sale").slice(0, 10);
+    const star = hasMatches(s) ? "★ " : "";
+    if (sort === "near" && m != null) return `${star}${fmtMi(m)} mi`;
+    if (sort === "size" && s.sqft) return `${star}${shortSqft(s.sqft)}`;
+    if (s.value) return `${star}${money(s.value)}`;
+    if (s.sqft) return `${star}${shortSqft(s.sqft)}`;
+    return `${star}${(s.city || "Sale").slice(0, 10)}`;
   }
 
-  // ---------- pins & map framing ----------
   const pins = new Map();
   const pinCache = new Map();
   for (const s of sales) {
@@ -609,26 +698,27 @@ function startApp(DATA) {
     for (const s of sales) {
       const mk = pins.get(s.id); if (!mk) continue;
       const st = status(s).k;
-      const isVis = shown[st] || activeId === s.id;
+      const isVis = (shown[st] && (!onlyMatches || hasMatches(s))) || activeId === s.id;
       if (!isVis) { if (map.hasLayer(mk)) map.removeLayer(mk); continue; }
       if (!map.hasLayer(mk)) mk.addTo(map);
       const lbl = pinLabel(s);
-      const sig = `${st}|${lbl}`;
+      const matched = hasMatches(s);
+      const sig = `${st}|${matched}|${lbl}`;
       if (pinCache.get(s.id) !== sig) {
         pinCache.set(s.id, sig);
-        const html = `<div class="pill-pin ${st}"><span class="dot"></span><span>${esc(lbl)}</span></div>`;
+        const html = `<div class="pill-pin ${st} ${matched ? "matched" : ""}"><span class="dot"></span><span>${esc(lbl)}</span></div>`;
         mk.setIcon(L.divIcon({ className: "pin-wrap", html, iconSize: [0, 0], iconAnchor: [0, 0] }));
       }
       const el = mk.getElement();
       if (el) el.classList.toggle("sel", activeId === s.id);
-      mk.setZIndexOffset(activeId === s.id ? 1000 : st === "open" ? 200 : st === "soon" ? 100 : 0);
+      mk.setZIndexOffset(activeId === s.id ? 1000 : matched ? 500 : st === "open" ? 200 : st === "soon" ? 100 : 0);
     }
   }
 
   function mapPadding() {
-    if (innerWidth >= 860) return { tl: [432, 40], br: [68, 40] };
+    if (innerWidth >= 860) return { tl: [442, 40], br: [68, 40] };
     const cardsHidden = document.body.classList.contains("cards-hidden");
-    return { tl: [58, 72], br: [70, cardsHidden ? 68 : 168] };
+    return { tl: [58, 72], br: [70, cardsHidden ? 68 : 176] };
   }
   function fitAll(animate = true) {
     const pts = visible().filter((s) => s.lat != null).map((s) => [s.lat, s.lng]);
@@ -643,7 +733,6 @@ function startApp(DATA) {
   function panToSale(s, zoomIn = true) {
     if (!s || s.lat == null) return;
     const p = mapPadding();
-    // Zoom to 14.5 on pin tap so Google Maps street names, highways & landmarks are crystal clear.
     const z = zoomIn ? Math.max(map.getZoom(), 14.5) : map.getZoom();
     const size = map.getSize();
     const cx = (p.tl[0] + size.x - p.br[0]) / 2, cy = (p.tl[1] + size.y - p.br[1]) / 2;
@@ -651,9 +740,8 @@ function startApp(DATA) {
     map.flyTo(map.unproject(target, z), z, { duration: 0.45 });
   }
 
-  // ---------- location (auto-pulled on open, defaults to Near Me) ----------
+  // ---------- location ----------
   let meMarker = null, geoWatchId = null, locTimeout = null, firstFix = true;
-
   function renderGeoToast() {
     const el = $("#geo-toast");
     if (!locError) { el.classList.add("hidden"); return; }
@@ -667,124 +755,75 @@ function startApp(DATA) {
     $("#gt-retry")?.addEventListener("click", () => requestLocation(true));
     $("#gt-x")?.addEventListener("click", () => { locError = null; renderGeoToast(); });
   }
-
   function updateLocateFab() {
-    const b = $("#fab-locate");
-    const isLoad = locState === "loading";
+    const b = $("#fab-locate"), isLoad = locState === "loading";
     b.classList.toggle("loading", isLoad);
     b.classList.toggle("active", Boolean(me));
     b.innerHTML = isLoad
       ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg>`
       : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22"/></svg>`;
   }
-
   function setPosition(lat, lng, explicit) {
     clearTimeout(locTimeout);
-    me = { lat, lng };
-    locState = "gps";
-    locError = null;
+    me = { lat, lng }; locState = "gps"; locError = null;
     const icon = L.divIcon({ className: "", html: '<div class="me-dot"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
     if (!meMarker) meMarker = L.marker([lat, lng], { icon, interactive: false, zIndexOffset: 1500 }).addTo(map);
     else meMarker.setLatLng([lat, lng]);
-
     const wasFirst = firstFix;
     firstFix = false;
-    if (wasFirst || explicit) {
+    if ((wasFirst && !detailId) || explicit) {
       sort = "near";
       const list = visible();
-      if (list.length) activeId = list[0].id;
+      if (list.length && !detailId) activeId = list[0].id;
     }
     render();
-    if (wasFirst) fitAll(true);
+    if (wasFirst && !detailId) fitAll(true);
     else if (explicit) map.flyTo([lat, lng], Math.max(map.getZoom(), 13), { duration: 0.45 });
   }
-
   function failLocation(info) {
     clearTimeout(locTimeout);
-    locState = me ? "gps" : "error";
-    locError = info;
-    updateLocateFab();
-    renderGeoToast();
+    locState = me ? "gps" : "error"; locError = info;
+    updateLocateFab(); renderGeoToast();
   }
-
   function startWatch() {
     if (geoWatchId != null || !("geolocation" in navigator)) return;
-    geoWatchId = navigator.geolocation.watchPosition((pos) => {
-      setPosition(pos.coords.latitude, pos.coords.longitude, false);
-    }, () => {}, { enableHighAccuracy: true, maximumAge: 15000, timeout: 25000 });
+    geoWatchId = navigator.geolocation.watchPosition((pos) => setPosition(pos.coords.latitude, pos.coords.longitude, false),
+      () => {}, { enableHighAccuracy: true, maximumAge: 15000, timeout: 25000 });
   }
-
   function browserLocate(explicit) {
     if (!window.isSecureContext || !("geolocation" in navigator)) {
       if (explicit) failLocation({ text: "Location unavailable in this browser." });
       else { locState = "idle"; updateLocateFab(); }
       return;
     }
-    let settled = false;
-    clearTimeout(locTimeout);
-    locTimeout = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      failLocation({ text: "Location timed out. Tap Retry." });
-    }, 10000);
+    let settled = false; clearTimeout(locTimeout);
+    locTimeout = setTimeout(() => { if (!settled) { settled = true; failLocation({ text: "Location timed out. Tap Retry." }); } }, 10000);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        if (settled) return;
-        settled = true;
-        setPosition(pos.coords.latitude, pos.coords.longitude, explicit);
-        startWatch();
-      },
-      (err) => {
-        if (settled) return;
-        settled = true;
-        failLocation({
-          text: err.code === 1 ? "Allow location access to sort by nearest." : "Couldn't get GPS right now.",
-        });
-      },
+      (pos) => { if (!settled) { settled = true; setPosition(pos.coords.latitude, pos.coords.longitude, explicit); startWatch(); } },
+      (err) => { if (!settled) { settled = true; failLocation({ text: err.code === 1 ? "Allow location to sort by nearest." : "Couldn't get GPS right now." }); } },
       { enableHighAccuracy: false, maximumAge: 60000, timeout: 9000 }
     );
   }
-
   function requestLocation(explicit) {
     if (locState === "loading") return;
-    if (explicit && me) {
-      map.flyTo([me.lat, me.lng], Math.max(map.getZoom(), 13), { duration: 0.45 });
-      return;
-    }
-    locState = "loading";
-    locError = null;
-    updateLocateFab();
-    renderGeoToast();
-
+    if (explicit && me) { map.flyTo([me.lat, me.lng], Math.max(map.getZoom(), 13), { duration: 0.45 }); return; }
+    locState = "loading"; locError = null; updateLocateFab(); renderGeoToast();
     const lm = inTMA ? tg.LocationManager : null;
     if (lm) {
       const runTma = () => {
         if (!lm.isLocationAvailable) { browserLocate(explicit); return; }
-        if (lm.isAccessRequested && !lm.isAccessGranted) {
-          failLocation({ text: "Location is off for this app in Telegram.", canSettings: true });
-          return;
-        }
-        let settled = false;
-        clearTimeout(locTimeout);
-        locTimeout = setTimeout(() => {
-          if (settled) return;
-          settled = true;
-          browserLocate(explicit);
-        }, 10000);
+        if (lm.isAccessRequested && !lm.isAccessGranted) { failLocation({ text: "Location is off for this app in Telegram.", canSettings: true }); return; }
+        let settled = false; clearTimeout(locTimeout);
+        locTimeout = setTimeout(() => { if (!settled) { settled = true; browserLocate(explicit); } }, 10000);
         lm.getLocation((loc) => {
           if (settled) return;
           settled = true;
-          if (loc && loc.latitude != null && loc.longitude != null) {
-            setPosition(loc.latitude, loc.longitude, explicit);
-          } else if (lm.isAccessRequested && !lm.isAccessGranted) {
-            failLocation({ text: "Location permission denied in Telegram.", canSettings: true });
-          } else {
-            browserLocate(explicit);
-          }
+          if (loc && loc.latitude != null && loc.longitude != null) setPosition(loc.latitude, loc.longitude, explicit);
+          else if (lm.isAccessRequested && !lm.isAccessGranted) failLocation({ text: "Location permission denied in Telegram.", canSettings: true });
+          else browserLocate(explicit);
         });
       };
-      if (lm.isInited) runTma();
-      else lm.init(runTma);
+      if (lm.isInited) runTma(); else lm.init(runTma);
       return;
     }
     browserLocate(explicit);
@@ -807,24 +846,60 @@ function startApp(DATA) {
     if (inTMA && tg.openLink) tg.openLink(url);
     else window.open(url, "_blank", "noopener");
   }
+  function matchTagsHtml(s, limit = 3) {
+    if (!hasMatches(s)) return "";
+    const entries = Object.entries(s.matches).slice(0, limit);
+    return `<div class="mtags">${entries.map(([t, arr]) => `<span class="mtag">★ ${esc(t)} (${arr.length})</span>`).join("")}</div>`;
+  }
 
   function syncBackButton() {
     if (!inTMA || !tg.BackButton) return;
-    if (detailId || listOpen) tg.BackButton.show();
+    if ($("#lightbox").classList.contains("open") || detailId || listOpen) tg.BackButton.show();
     else tg.BackButton.hide();
   }
 
+  // ---------- lightbox ----------
+  function openLightbox(items, idx) {
+    lbItems = items; lbIdx = idx;
+    renderLightbox();
+    $("#lightbox").classList.add("open");
+    syncBackButton();
+  }
+  function closeLightbox() {
+    $("#lightbox").classList.remove("open");
+    syncBackButton();
+  }
+  function renderLightbox() {
+    const cur = lbItems[lbIdx]; if (!cur) return;
+    $("#lb-cap").textContent = cur.cap;
+    $("#lb-img").src = cur.full;
+    $("#lb-pos").textContent = `${lbIdx + 1} / ${lbItems.length}`;
+    $("#lb-prev").disabled = lbIdx <= 0;
+    $("#lb-next").disabled = lbIdx >= lbItems.length - 1;
+  }
+  $("#lb-close").onclick = closeLightbox;
+  $("#lb-prev").onclick = () => { if (lbIdx > 0) { lbIdx--; renderLightbox(); } };
+  $("#lb-next").onclick = () => { if (lbIdx < lbItems.length - 1) { lbIdx++; renderLightbox(); } };
+
   // ---------- rendering ----------
   function renderHeaders() {
-    const dayStr = dFmt.format(pageDay);
+    const dayStr = DATA.upcomingMode ? "Upcoming" : dFmt.format(pageDay);
     const gen = new Date(DATA.generated);
     const genStr = ymd(gen) === DATA.date || ymd(gen) === ymd(new Date()) ? time(gen) : dFmt.format(gen);
+    const totalMatched = sales.filter(hasMatches).length;
     $("#m-title").textContent = dayStr;
     $("#m-cnt").textContent = `· ${sales.length}`;
     $("#l-title").textContent = dayStr;
-    $("#l-sub").textContent = `${sales.length} sales · updated ${genStr}`;
+    $("#l-sub").textContent = `${sales.length} sales${totalMatched ? ` · ★ ${totalMatched} matched` : ""} · ${genStr}`;
     $("#m-sort").value = sort;
     $("#reopen-cards").textContent = `Show ${visible().length} sales`;
+
+    const mf = $("#m-match");
+    mf.classList.toggle("show", totalMatched > 0);
+    mf.classList.toggle("on", onlyMatches);
+    mf.setAttribute("aria-pressed", String(onlyMatches));
+    mf.textContent = `★ ${totalMatched}`;
+
     updateLocateFab();
     renderGeoToast();
   }
@@ -853,6 +928,7 @@ function startApp(DATA) {
             <span class="pidx">${idx + 1}/${list.length}</span>
           </div>
           <h2>${esc(s.name)}</h2>
+          ${hasMatches(s) ? matchTagsHtml(s, 2) : (s.summary ? `<div class="psum">${esc(s.summary)}</div>` : "")}
           <div class="pbot">
             <span class="pfacts">${esc(bits.join(" · "))}</span>
             <a class="pdir" href="${esc(mapsLink(s))}" data-ext="1" target="_blank" rel="noopener">${ICONS.nav}Go</a>
@@ -879,7 +955,6 @@ function startApp(DATA) {
     setTimeout(() => { scrollingProgrammatically = false; }, smooth ? 350 : 60);
   }
 
-  // Sync active pin when user swipes carousel horizontally
   let scrollTimer = null;
   $("#carousel").addEventListener("scroll", () => {
     if (scrollingProgrammatically) return;
@@ -899,27 +974,35 @@ function startApp(DATA) {
 
   function renderListPanel() {
     const c = counts();
+    const totalMatched = sales.filter(hasMatches).length;
     const nonZero = ["open", "soon", "closed", "na"].filter((k) => c[k] > 0);
-    const chipsHtml = nonZero.length > 1
-      ? `<div class="chips">${nonZero.map((k) => `<button class="chip" data-k="${k}" aria-pressed="${shown[k]}"><span class="dot" style="background:var(--${k})"></span>${LABEL[k]} ${c[k]}</button>`).join("")}</div>`
-      : `<span style="font-size:12.5px;font-weight:600;color:var(--muted)">${sales.length} sales</span>`;
+    let chipsHtml = `<div class="chips">`;
+    if (totalMatched > 0) {
+      chipsHtml += `<button class="chip match-chip" id="l-match" aria-pressed="${onlyMatches}">★ Matches ${totalMatched}</button>`;
+    }
+    if (nonZero.length > 1) {
+      chipsHtml += nonZero.map((k) => `<button class="chip" data-k="${k}" aria-pressed="${shown[k]}"><span class="dot" style="background:var(--${k})"></span>${LABEL[k]} ${c[k]}</button>`).join("");
+    }
+    chipsHtml += `</div>`;
 
     $("#lbar").innerHTML = `${chipsHtml}<select class="sort-pill" id="l-sort" style="height:30px;box-shadow:none;background-color:var(--wash);border:0">
       <option value="near">Nearest</option>
+      <option value="match">Matches</option>
       <option value="size">Biggest</option>
       <option value="value">Value</option>
       <option value="start">Opens</option>
     </select>`;
     $("#l-sort").value = sort;
     $("#l-sort").onchange = (e) => changeSort(e.target.value);
-    for (const b of document.querySelectorAll("#lbar .chip")) {
+    $("#l-match")?.addEventListener("click", () => { onlyMatches = !onlyMatches; render(); fitAll(true); });
+    for (const b of document.querySelectorAll("#lbar .chip[data-k]")) {
       b.onclick = () => { shown[b.dataset.k] = !shown[b.dataset.k]; render(); };
     }
 
     const list = visible();
     if (!list.length) {
       $("#lscroll").innerHTML = `<p class="empty">No matching sales.<br><button id="showall">Show all</button></p>`;
-      $("#showall")?.addEventListener("click", () => { for (const k in shown) shown[k] = true; render(); });
+      $("#showall")?.addEventListener("click", () => { onlyMatches = false; for (const k in shown) shown[k] = true; render(); });
       return;
     }
     $("#lscroll").innerHTML = list.map((s) => {
@@ -938,6 +1021,8 @@ function startApp(DATA) {
         <span class="lrow-main">
           <h2>${esc(s.name)}</h2>
           <div class="sub">${esc(s.city)} · ${live}</div>
+          ${matchTagsHtml(s, 3)}
+          ${s.summary ? `<div class="lsum">${esc(s.summary)}</div>` : ""}
           ${f.length ? `<div class="facts">${f.join("")}</div>` : ""}
         </span>
         <a class="dir-ic" href="${esc(mapsLink(s))}" data-ext="1" target="_blank" rel="noopener" aria-label="Directions">${ICONS.nav}</a>
@@ -972,8 +1057,7 @@ function startApp(DATA) {
     `;
     $("#d-close").onclick = closeDetail;
     $("#d-map").onclick = () => {
-      closeDetail();
-      setListOpen(false);
+      closeDetail(); setListOpen(false);
       document.body.classList.remove("cards-hidden");
       focusPin(s.id, true, true);
     };
@@ -994,6 +1078,35 @@ function startApp(DATA) {
     ].filter(Boolean);
     const today = ymd(new Date());
 
+    // Build matched photos gallery + lightbox list
+    const allLb = [];
+    let matchesHtml = "";
+    if (hasMatches(s)) {
+      matchesHtml = `<h3 class="sec">Watchlist matches · tap to review</h3>`;
+      for (const [term, photos] of Object.entries(s.matches)) {
+        const startIdx = allLb.length;
+        const shots = photos.map((ph, k) => {
+          const thumb = `https://picturescdn.estatesales.net/${s.id}/1-2/${ph.u}.jpg`;
+          const full = `https://picturescdn.estatesales.net/${s.id}/1-1/${ph.u}.jpg`;
+          const pct = Math.round(ph.p * 100);
+          allLb.push({ full, cap: `★ ${term} (${pct}% match)` });
+          return `<button class="mshot" data-lb="${startIdx + k}"><img src="${esc(thumb)}" alt="" loading="lazy"><span class="conf">${pct}%</span></button>`;
+        }).join("");
+        matchesHtml += `<div class="match-group">
+          <div class="mg-head"><span class="mg-title">★ ${esc(term)}</span><span class="mg-cnt">${photos.length} photo${photos.length === 1 ? "" : "s"}</span></div>
+          <div class="mstrip">${shots}</div>
+        </div>`;
+      }
+    }
+
+    const summaryHtml = (s.summary || (s.cats && s.cats.length))
+      ? `<h3 class="sec">What's at this sale</h3>
+         <div class="summary-box">
+           ${s.summary ? `<p>${esc(s.summary)}</p>` : ""}
+           ${s.cats?.length ? `<div class="cat-chips">${s.cats.map((c) => `<span class="cat-chip">${esc(c)}</span>`).join("")}</div>` : ""}
+         </div>`
+      : "";
+
     $("#dscroll").innerHTML = `
       <a class="hero" href="${esc(s.url)}" data-ext="1" target="_blank" rel="noopener">
         ${s.photo ? `<img src="${esc(s.photo)}" alt="">` : ""}
@@ -1012,6 +1125,8 @@ function startApp(DATA) {
         <a class="btn" href="${esc(s.url)}" data-ext="1" target="_blank" rel="noopener">Listing</a>
         ${zillow ? `<a class="btn" href="${esc(zillow)}" data-ext="1" target="_blank" rel="noopener">Zillow</a>` : `<span class="btn disabled">Zillow</span>`}
       </div>
+      ${matchesHtml}
+      ${summaryHtml}
       ${cells.length ? `<h3 class="sec">House record · county parcel</h3>
         <dl class="grid">${cells.map(([k, v, t]) => `<div><dt>${k}</dt><dd class="${t ? "txt" : ""}">${esc(v)}</dd></div>`).join("")}</dl>`
         : `<p class="host" style="margin-bottom:16px">No county parcel record matched this address.</p>`}
@@ -1023,6 +1138,9 @@ function startApp(DATA) {
     `;
     $("#dscroll").scrollTop = 0;
 
+    for (const btn of document.querySelectorAll("#dscroll .mshot")) {
+      btn.onclick = () => openLightbox(allLb, +btn.dataset.lb);
+    }
     $("#copy-addr")?.addEventListener("click", async () => {
       try { await navigator.clipboard.writeText(s.address); $("#copy-lbl").textContent = "Copied"; setTimeout(() => { if ($("#copy-lbl")) $("#copy-lbl").textContent = "Copy"; }, 1400); } catch {}
     });
@@ -1042,30 +1160,15 @@ function startApp(DATA) {
   function focusPin(id, scrollCards, zoomIn) {
     activeId = id;
     if (inTMA) tg.HapticFeedback?.selectionChanged?.();
-    for (const c of document.querySelectorAll("#carousel .pcard")) {
-      c.classList.toggle("active", +c.dataset.id === id);
-    }
+    for (const c of document.querySelectorAll("#carousel .pcard")) c.classList.toggle("active", +c.dataset.id === id);
     drawPins();
     if (scrollCards) scrollCarouselTo(id, true);
     const s = sales.find((x) => x.id === id);
     if (s) panToSale(s, zoomIn);
   }
-
-  function openDetail(id) {
-    activeId = id;
-    detailId = id;
-    drawPins();
-    renderDetail();
-  }
-  function closeDetail() {
-    detailId = null;
-    renderDetail();
-  }
-  function setListOpen(open) {
-    listOpen = open;
-    document.body.classList.toggle("view-list", open);
-    syncBackButton();
-  }
+  function openDetail(id) { activeId = id; detailId = id; drawPins(); renderDetail(); }
+  function closeDetail() { detailId = null; renderDetail(); }
+  function setListOpen(open) { listOpen = open; document.body.classList.toggle("view-list", open); syncBackButton(); }
   function changeSort(next) {
     sort = next;
     if (next === "near" && !me) requestLocation(true);
@@ -1074,8 +1177,8 @@ function startApp(DATA) {
     render();
   }
 
-  // ---------- events ----------
   $("#m-sort").onchange = (e) => changeSort(e.target.value);
+  $("#m-match").onclick = () => { onlyMatches = !onlyMatches; render(); fitAll(true); };
   $("#open-list").onclick = () => setListOpen(true);
   $("#close-list").onclick = () => setListOpen(false);
   $("#fab-locate").onclick = () => requestLocation(true);
@@ -1093,18 +1196,28 @@ function startApp(DATA) {
   });
   if (inTMA && tg.BackButton) {
     tg.BackButton.onClick(() => {
-      if (detailId) closeDetail();
+      if ($("#lightbox").classList.contains("open")) closeLightbox();
+      else if (detailId) closeDetail();
       else if (listOpen) setListOpen(false);
     });
   }
   setInterval(render, 60000);
 
-  // ---------- boot ----------
-  if (!isToday()) shown.closed = true;
+  if (!isToday() || DATA.upcomingMode) shown.closed = true;
   else if (!sales.some((s) => ["open", "soon"].includes(status(s).k))) shown.closed = true;
+
+  const focusParam = Number(URL_PARAMS.get("focus"));
+  if (focusParam && sales.some((s) => s.id === focusParam)) {
+    activeId = focusParam;
+    detailId = focusParam;
+  }
+
   render();
-  requestAnimationFrame(() => fitAll(false));
-  // Auto-pull GPS immediately so the map defaults to Near Me on open.
+  if (focusParam && sales.some((s) => s.id === focusParam)) {
+    requestAnimationFrame(() => panToSale(sales.find((s) => s.id === focusParam), true));
+  } else {
+    requestAnimationFrame(() => fitAll(false));
+  }
   requestLocation(false);
 }
 
