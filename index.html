@@ -440,26 +440,50 @@ function setSnap(n) {
 setSnap("mid");
 addEventListener("resize", () => setSnap(snap));
 
-// ---------- load sales.json from GitHub Gist ----------
+// ---------- load & decrypt sales.json from secret GitHub Gist ----------
+const OWNER_HASH = "aef23a3e9453b131882b6553c7e0c548f09facdf28b75558cff04ca6dafd3201";
+
+function b64uToBytes(s) {
+  const b = s.replace(/-/g, "+").replace(/_/g, "/");
+  const bin = atob(b + "=".repeat((4 - (b.length % 4)) % 4));
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+}
+
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 async function fetchData() {
+  const uid = tg?.initDataUnsafe?.user?.id;
+  if (!inTMA || !uid || (await sha256Hex(String(uid))) !== OWNER_HASH) {
+    throw new Error("🔒 Private — open this map from your Telegram bot.");
+  }
   const q = new URLSearchParams(location.search);
-  const g = q.get("g");
-  const u = q.get("u");
-  const c = q.get("c");
-  if (!g) throw new Error("Missing map data link. Send .e in Telegram to open today's map.");
-  // Fast path: raw CDN with exact revision SHA (zero cache lag, no API rate limit).
+  const h = new URLSearchParams(location.hash.replace(/^#/, ""));
+  const g = q.get("g"), u = q.get("u"), c = q.get("c"), k = q.get("k") || h.get("k");
+  if (!g || !k) throw new Error("Missing map link or key. Send .e in Telegram.");
+
+  let raw = null;
   if (u && c) {
     try {
-      const r = await fetch(`https://gist.githubusercontent.com/${encodeURIComponent(u)}/${encodeURIComponent(g)}/raw/${encodeURIComponent(c)}/sales.json`);
-      if (r.ok) return await r.json();
+      const r = await fetch(`https://gist.githubusercontent.com/${encodeURIComponent(u)}/${encodeURIComponent(g)}/raw/${encodeURIComponent(c)}/sales.enc`);
+      if (r.ok) raw = (await r.text()).trim();
     } catch {}
   }
-  const r = await fetch(`https://api.github.com/gists/${encodeURIComponent(g)}`);
-  if (!r.ok) throw new Error(`Could not load estate sales data (HTTP ${r.status}).`);
-  const gist = await r.json();
-  const file = gist.files?.["sales.json"] || Object.values(gist.files || {})[0];
-  if (!file?.content) throw new Error("Estate sales data file was empty.");
-  return JSON.parse(file.content);
+  if (!raw) {
+    const r = await fetch(`https://api.github.com/gists/${encodeURIComponent(g)}`);
+    if (!r.ok) throw new Error(`Could not load estate sales data (HTTP ${r.status}).`);
+    const gist = await r.json();
+    const file = gist.files?.["sales.enc"] || Object.values(gist.files || {})[0];
+    raw = file?.content?.trim();
+  }
+  if (!raw) throw new Error("Estate sales data was empty.");
+
+  const blob = b64uToBytes(raw);
+  const key = await crypto.subtle.importKey("raw", b64uToBytes(k), "AES-GCM", false, ["decrypt"]);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: blob.slice(0, 12) }, key, blob.slice(12));
+  return JSON.parse(new TextDecoder().decode(plain));
 }
 
 // ---------- main app ----------
