@@ -642,13 +642,15 @@ async function sha256Hex(str) {
 }
 
 async function fetchData() {
-  const uid = tg?.initDataUnsafe?.user?.id;
-  if (!inTMA || !uid || (await sha256Hex(String(uid))) !== OWNER_HASH) {
-    throw new Error("🔒 Private — open this map from your Telegram bot.");
+  // Inside Telegram only the owner may open it. Outside Telegram (links krob sends in Discord DMs)
+  // the AES key in the link is the access check: without it the data can't be decrypted.
+  if (inTMA) {
+    const uid = tg?.initDataUnsafe?.user?.id;
+    if (!uid || (await sha256Hex(String(uid))) !== OWNER_HASH) throw new Error("🔒 Private — open this map from your Telegram bot.");
   }
   const h = new URLSearchParams(location.hash.replace(/^#/, ""));
   const g = URL_PARAMS.get("g"), u = URL_PARAMS.get("u"), c = URL_PARAMS.get("c"), k = URL_PARAMS.get("k") || h.get("k");
-  if (!g || !k) throw new Error("Missing map link or key. Send .e in Telegram.");
+  if (!g || !k) throw new Error("Missing map link or key. Send .e to the bot for a fresh link.");
 
   let raw = null;
   if (u && c) {
@@ -1163,7 +1165,7 @@ function startApp(DATA) {
     $("#m-title").textContent = dayStr;
     $("#m-cnt").textContent = `· ${n}`;
     $("#l-title").textContent = listMode === "history" ? "Saved & visited" : dayStr;
-    $("#l-sub").textContent = listMode === "history" ? "Synced through Telegram" : [rangeStr && dayFilter === "all" ? rangeStr : "", `${n} sales`, genStr].filter(Boolean).join(" · ");
+    $("#l-sub").textContent = listMode === "history" ? (inTMA && tg.CloudStorage ? "Synced through Telegram" : "Saved on this device") : [rangeStr && dayFilter === "all" ? rangeStr : "", `${n} sales`, genStr].filter(Boolean).join(" · ");
     $("#m-sort").value = sort;
     $("#reopen-cards").textContent = `Show ${n} sales`;
     const mc = $("#m-chips"), sl = mc.scrollLeft;
