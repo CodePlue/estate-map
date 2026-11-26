@@ -375,13 +375,30 @@ body.view-list .list-panel { display: flex; }
   padding: 12px 13px; border-radius: 13px; background: var(--wash); border: 1px solid var(--line);
   margin-bottom: 16px;
 }
-.summary-box p { font-size: 13.5px; line-height: 1.4; color: var(--ink); }
-.cat-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-.cat-chip { padding: 3px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.summary-box p { font-size: 13.5px; line-height: 1.45; color: var(--ink); }
+.cat-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+.cat-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line);
+  font-size: 11.5px; font-weight: 600; color: var(--muted);
+}
+.cat-chip .n { opacity: 0.72; font-variant-numeric: tabular-nums; }
+.cat-chip.elec-chip { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); cursor: pointer; }
+.seller-desc { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); }
+.seller-desc summary {
+  font-size: 12px; font-weight: 700; color: var(--accent); cursor: pointer;
+  list-style: none; display: inline-flex; align-items: center; gap: 5px;
+}
+.seller-desc summary::-webkit-details-marker { display: none; }
+.seller-desc summary::before { content: "▸"; font-size: 11px; transition: transform 0.15s ease; }
+.seller-desc[open] summary::before { transform: rotate(90deg); }
+.seller-desc p { margin-top: 7px; font-size: 12.5px; line-height: 1.48; color: var(--muted); white-space: pre-wrap; }
+.tmatch-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
 
 .match-group { margin-bottom: 16px; }
 .mg-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .mg-title { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--match); }
+.mg-title.elec { color: var(--accent); }
 .mg-cnt { font-size: 12px; color: var(--muted); font-weight: 600; }
 .mstrip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .mstrip::-webkit-scrollbar { display: none; }
@@ -389,6 +406,7 @@ body.view-list .list-panel { display: flex; }
   position: relative; flex: 0 0 112px; height: 112px; border-radius: 12px; overflow: hidden;
   border: 1.5px solid var(--match); background: var(--wash); padding: 0;
 }
+.mshot.elec { border-color: var(--accent); }
 .mshot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .mshot .conf {
   position: absolute; right: 5px; bottom: 5px; padding: 2px 6px; border-radius: 999px;
@@ -773,8 +791,8 @@ function startApp(DATA) {
   const money = (v) => (v >= 1e6 ? `$${(v / 1e6).toFixed(v >= 1e7 ? 0 : 1)}M` : `$${Math.round(v / 1000)}k`);
   const shortSqft = (v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k sf` : `${v} sf`);
   const num = (v) => v.toLocaleString();
-  const hasMatches = (s) => Boolean(s.matches && Object.keys(s.matches).length);
-  const matchCount = (s) => s.matches ? Object.values(s.matches).reduce((a, b) => a + b.length, 0) : 0;
+  const hasMatches = (s) => Boolean((s.matches && Object.keys(s.matches).length) || (s.textMatches && s.textMatches.length));
+  const matchCount = (s) => (s.matches ? Object.values(s.matches).reduce((a, b) => a + b.length, 0) : 0) + (s.textMatches ? s.textMatches.length : 0);
 
   const sales = DATA.sales || [];
   const shown = { open: true, soon: true, na: true, closed: false };
@@ -1010,8 +1028,12 @@ function startApp(DATA) {
   }
   function matchTagsHtml(s, limit = 3) {
     if (!hasMatches(s)) return "";
-    const entries = Object.entries(s.matches).slice(0, limit);
-    return `<div class="mtags">${entries.map(([t, arr]) => `<span class="mtag">★ ${esc(t)} (${arr.length})</span>`).join("")}</div>`;
+    const pills = [];
+    for (const [t, arr] of Object.entries(s.matches || {})) pills.push(`<span class="mtag">★ ${esc(t)} (${arr.length})</span>`);
+    for (const t of (s.textMatches || [])) {
+      if (!s.matches?.[t]) pills.push(`<span class="mtag">📝 ${esc(t)}</span>`);
+    }
+    return `<div class="mtags">${pills.slice(0, limit).join("")}</div>`;
   }
 
   // "Sat 8a–2p" headline with a weekday-coloured tag
@@ -1415,12 +1437,15 @@ function startApp(DATA) {
     ].filter(Boolean);
     const today = ymd(new Date());
 
-    // Build matched photos gallery + lightbox list
+    // Build matched photos + electronics photos gallery & lightbox list
     const allLb = [];
     let matchesHtml = "";
     if (hasMatches(s)) {
       matchesHtml = `<h3 class="sec">Watchlist matches · tap to review</h3>`;
-      for (const [term, photos] of Object.entries(s.matches)) {
+      if (s.textMatches?.length) {
+        matchesHtml += `<div class="tmatch-row">${s.textMatches.map((t) => `<span class="mtag">📝 ${esc(t)} (in listing)</span>`).join("")}</div>`;
+      }
+      for (const [term, photos] of Object.entries(s.matches || {})) {
         const startIdx = allLb.length;
         const shots = photos.map((ph, k) => {
           const thumb = `https://picturescdn.estatesales.net/${s.id}/1-2/${ph.u}.jpg`;
@@ -1436,11 +1461,37 @@ function startApp(DATA) {
       }
     }
 
-    const summaryHtml = (s.summary || (s.cats && s.cats.length))
+    let elecLbStart = -1;
+    let elecHtml = "";
+    if (s.elecPhotos?.length) {
+      elecLbStart = allLb.length;
+      const shots = s.elecPhotos.map((u, k) => {
+        const thumb = `https://picturescdn.estatesales.net/${s.id}/1-2/${u}.jpg`;
+        const full = `https://picturescdn.estatesales.net/${s.id}/1-1/${u}.jpg`;
+        allLb.push({ full, cap: `⚡ Electronics (${k + 1}/${s.elecPhotos.length})` });
+        return `<button class="mshot elec" data-lb="${elecLbStart + k}"><img src="${esc(thumb)}" alt="" loading="lazy"></button>`;
+      }).join("");
+      elecHtml = `<div class="match-group">
+        <div class="mg-head"><span class="mg-title elec">⚡ Electronics spotted</span><span class="mg-cnt">${s.elecPhotos.length} photo${s.elecPhotos.length === 1 ? "" : "s"}</span></div>
+        <div class="mstrip">${shots}</div>
+      </div>`;
+    }
+
+    const catChipsHtml = (s.cats || []).map((c) => {
+      const [label, count, key] = Array.isArray(c) ? c : [c, null, null];
+      const cnt = count != null ? ` <span class="n">· ${count}</span>` : "";
+      if (key === "electronics" && elecLbStart >= 0) {
+        return `<button class="cat-chip elec-chip" data-lb="${elecLbStart}">⚡ ${esc(label)}${cnt}</button>`;
+      }
+      return `<span class="cat-chip">${esc(label)}${cnt}</span>`;
+    }).join("");
+
+    const summaryHtml = (s.summary || catChipsHtml || s.desc)
       ? `<h3 class="sec">What's at this sale</h3>
          <div class="summary-box">
            ${s.summary ? `<p>${esc(s.summary)}</p>` : ""}
-           ${s.cats?.length ? `<div class="cat-chips">${s.cats.map((c) => `<span class="cat-chip">${esc(c)}</span>`).join("")}</div>` : ""}
+           ${catChipsHtml ? `<div class="cat-chips">${catChipsHtml}</div>` : ""}
+           ${s.desc ? `<details class="seller-desc"><summary>Seller's listing notes</summary><p>${esc(s.desc)}</p></details>` : ""}
          </div>`
       : "";
 
@@ -1469,6 +1520,7 @@ function startApp(DATA) {
         <button class="btn ${seenMark(s) ? "seen-on" : ""}" id="d-seen">${seenMark(s) ? `✓ Been here · ${dFmt.format(new Date(seenMark(s).t))}` : "✓ Mark visited"}</button>
       </div>
       ${matchesHtml}
+      ${elecHtml}
       ${summaryHtml}
       ${cells.length ? `<h3 class="sec">House record · county parcel</h3>
         <dl class="grid">${cells.map(([k, v, t]) => `<div><dt>${k}</dt><dd class="${t ? "txt" : ""}">${esc(v)}</dd></div>`).join("")}</dl>`
@@ -1486,7 +1538,7 @@ function startApp(DATA) {
     $("#d-fav").onclick = () => toggleFav(s);
     $("#d-seen").onclick = () => toggleSeen(s);
 
-    for (const btn of document.querySelectorAll("#dscroll .mshot")) {
+    for (const btn of document.querySelectorAll("#dscroll [data-lb]")) {
       btn.onclick = () => openLightbox(allLb, +btn.dataset.lb);
     }
     $("#copy-addr")?.addEventListener("click", async () => {
