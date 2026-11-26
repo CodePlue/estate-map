@@ -174,7 +174,7 @@ a { color: inherit; text-decoration: none; }
 
 /* Geo toast */
 .geo-toast {
-  position: fixed; top: calc(56px + var(--safe-t)); left: 10px; right: 10px; z-index: 490;
+  position: fixed; top: calc(100px + var(--safe-t)); left: 10px; right: 10px; z-index: 490;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 9px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line);
   box-shadow: var(--shadow-md); font-size: 12.5px; color: var(--muted);
@@ -435,10 +435,78 @@ body.view-list .list-panel { display: flex; }
 .empty { padding: 36px 20px; text-align: center; color: var(--muted); }
 .empty button { margin-top: 10px; padding: 8px 14px; border-radius: 999px; background: var(--wash); color: var(--ink); font-weight: 700; }
 
+/* ---- Day colours (by weekday, same every week) + marks ---- */
+:root { --d0: #9333ea; --d1: #64748b; --d2: #0891b2; --d3: #0d9488; --d4: #ca8a04; --d5: #2563eb; --d6: #ea580c; --fav: #e11d48; }
+
+.chipbar { flex-basis: 100%; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 1px 4px; }
+.chipbar::-webkit-scrollbar { display: none; }
+.chipbar .chip { background: var(--surface-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: var(--shadow-sm); height: 32px; flex: none; }
+.chip.radio[aria-pressed="false"] { opacity: 1; border-style: solid; }
+.chip.day .dot { background: var(--dc); }
+.chip.day[aria-pressed="true"] { background: var(--dc); border-color: var(--dc); color: #fff; }
+.chip.day[aria-pressed="true"] .dot { background: #fff; }
+.chip.all[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.chip.fav-chip { color: var(--fav); border-color: var(--fav); }
+.chip.fav-chip[aria-pressed="true"] { background: var(--fav); color: #fff; opacity: 1; border-style: solid; }
+.chip.fav-chip[aria-pressed="false"], .chip.match-chip[aria-pressed="false"], .chip.hist-chip, .chip.route-chip { opacity: 1; border-style: solid; }
+.chip.route-chip { background: var(--accent) !important; border-color: var(--accent); color: #fff; }
+.chip.hist-chip { color: var(--ink); }
+
+.pill-pin.wk .dot, .pill-pin.wk.matched .dot { background: var(--dc); box-shadow: 0 0 0 1.5px #fff; }
+.pill-pin.live { box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.6), var(--shadow-pin); }
+.pill-pin.seen { opacity: 0.5; }
+.pill-pin .fv { color: var(--fav); }
+.pill-pin.matched .fv { color: #fff; }
+
+.when { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; }
+.when > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.when .live { color: var(--open); }
+.when .ended { color: var(--muted); }
+.when .span { color: var(--muted); font-weight: 600; }
+.dtag { flex: none; padding: 1px 7px; border-radius: 6px; background: var(--dc); color: #fff; font-size: 11.5px; font-weight: 800; letter-spacing: 0.02em; }
+.pwhere { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.pwhere .city { overflow: hidden; text-overflow: ellipsis; }
+.pwhere .hid { color: var(--muted); font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+.pname { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.badge { flex: none; padding: 1px 6px; border-radius: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.03em; }
+.badge.new { background: var(--accent); color: #fff; }
+.badge.seen { background: var(--open); color: #fff; }
+.pthumb .fav-flag, .lrow .thumb .fav-flag { position: absolute; right: 5px; bottom: 5px; width: 20px; height: 20px; border-radius: 50%; background: var(--fav); color: #fff; display: grid; place-items: center; font-size: 11px; }
+.pcard.seen .pthumb img, .lrow.seen .thumb img { filter: grayscale(0.85); opacity: 0.6; }
+.pcard.seen h2, .pcard.seen .when, .lrow.seen h2 { opacity: 0.6; }
+.heart { flex: none; width: 30px; height: 28px; border-radius: 999px; display: grid; place-items: center; background: var(--wash); color: var(--muted); font-size: 15px; line-height: 1; }
+.heart.on { background: var(--fav); color: #fff; }
+.pbot .right { display: flex; align-items: center; gap: 6px; flex: none; }
+
+.dayhead { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: var(--surface); border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.dayhead::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--dc); }
+.dayhead .n { color: var(--muted); font-weight: 700; }
+.lrow .when { font-size: 13px; }
+.lrow .heart { margin-bottom: 6px; }
+.lrow .side { display: flex; flex-direction: column; align-items: center; }
+
+.hsec { padding: 14px 14px 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.hrow.past h2 { color: var(--muted); }
+.xbtn { width: 34px; height: 34px; border-radius: 50%; background: var(--wash); color: var(--muted); display: grid; place-items: center; font-size: 14px; }
+.hempty { padding: 4px 14px 14px; font-size: 13px; color: var(--muted); }
+
+.marks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: -8px 0 18px; }
+.btn.fav-on { background: var(--fav); border-color: var(--fav); color: #fff; }
+.btn.seen-on { background: var(--open); border-color: var(--open); color: #fff; }
+.mpill.day { background: var(--dc); color: #fff; }
+
+.here-toast { position: fixed; top: calc(100px + var(--safe-t)); left: 10px; right: 10px; z-index: 495; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--surface); border: 1.5px solid var(--open); box-shadow: var(--shadow-md); font-size: 13px; font-weight: 600; }
+.here-toast.hidden { display: none; }
+
+/* swipe between listings in the detail sheet */
+.dscroll { touch-action: pan-y; will-change: transform; }
+.dscroll.snap { transition: transform 0.2s ease, opacity 0.2s ease; }
+.swipe-hint { text-align: center; font-size: 11.5px; color: var(--muted); padding: 2px 0 10px; }
+
 /* Desktop sidebar */
 @media (min-width: 860px) {
   .topbar, .carousel-wrap, .reopen-pill { display: none !important; }
-  .geo-toast { left: 428px; top: 14px; right: 76px; }
+  .geo-toast, .here-toast { left: 428px; top: 14px; right: 76px; }
   .list-panel {
     display: flex !important; top: 14px; left: 14px; bottom: 14px; right: auto; width: 410px;
     border-radius: 20px; border: 1px solid var(--line); box-shadow: var(--shadow-md); padding: 0;
@@ -461,7 +529,6 @@ body.view-list .list-panel { display: flex; }
     <h1 id="m-title">Estate Sales</h1>
     <span class="cnt" id="m-cnt"></span>
   </div>
-  <button class="match-filter" id="m-match" aria-pressed="false"></button>
   <select class="sort-pill" id="m-sort" aria-label="Sort sales">
     <option value="near">Nearest</option>
     <option value="match">Matches</option>
@@ -473,9 +540,11 @@ body.view-list .list-panel { display: flex; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
     <span>List</span>
   </button>
+  <div class="chipbar" id="m-chips"></div>
 </header>
 
 <div class="geo-toast hidden" id="geo-toast"></div>
+<div class="here-toast hidden" id="here-toast"></div>
 
 <div class="map-fabs">
   <button class="fab" id="fab-locate" aria-label="Center on my location">
@@ -603,6 +672,48 @@ async function fetchData() {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
+// Favorites ("f") and visited ("v") marks. Telegram CloudStorage is the source of truth (per user,
+// synced across devices); localStorage is only a cache so the first paint already has them.
+const Marks = (() => {
+  const LS_KEY = "estate.marks.v1";
+  const cs = inTMA && tg.CloudStorage && tg.isVersionAtLeast?.("6.9") ? tg.CloudStorage : null;
+  let data = { f: {}, v: {} };
+  try { const j = JSON.parse(localStorage.getItem(LS_KEY) || "null"); if (j && j.f && j.v) data = j; } catch {}
+  const saveLocal = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch {} };
+  function sync(onChange) {
+    if (!cs) return;
+    cs.getKeys((err, keys) => {
+      if (err || !Array.isArray(keys)) return;
+      const mine = keys.filter((k) => /^[fv]_\d+$/.test(k));
+      const next = { f: {}, v: {} };
+      if (!mine.length) { data = next; saveLocal(); onChange(); return; }
+      let left = Math.ceil(mine.length / 50), failed = false;
+      for (let i = 0; i < mine.length; i += 50) {
+        cs.getItems(mine.slice(i, i + 50), (e2, vals) => {
+          if (e2 || !vals) failed = true;
+          else for (const [k, v] of Object.entries(vals)) {
+            const [kind, id] = k.split("_");
+            try { if (v) next[kind][id] = JSON.parse(v); } catch {}
+          }
+          if (--left === 0 && !failed) { data = next; saveLocal(); onChange(); }
+        });
+      }
+    });
+  }
+  const get = (kind, id) => data[kind][String(id)] || null;
+  function set(kind, id, val) {
+    id = String(id);
+    if (val) data[kind][id] = val; else delete data[kind][id];
+    saveLocal();
+    if (cs) {
+      if (val) cs.setItem(`${kind}_${id}`, JSON.stringify(val), () => {});
+      else cs.removeItem(`${kind}_${id}`, () => {});
+    }
+  }
+  const all = (kind) => Object.entries(data[kind]).map(([id, v]) => ({ id: +id, ...v }));
+  return { sync, get, set, all };
+})();
+
 function startApp(DATA) {
   const tFmt = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" });
   const dFmt = new Intl.DateTimeFormat([], { weekday: "short", month: "short", day: "numeric" });
@@ -610,9 +721,27 @@ function startApp(DATA) {
   const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const pageDay = new Date(DATA.date + "T12:00:00");
   const isToday = () => ymd(new Date()) === DATA.date;
+  const wk = Boolean(DATA.upcomingMode);
+  const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dateOf = (ymdStr) => new Date(ymdStr + "T12:00:00");
+  const dayColor = (ymdStr) => `var(--d${dateOf(ymdStr).getDay()})`;
+  const dayName = (ymdStr) => (ymdStr === ymd(new Date()) ? "Today" : WEEKDAY[dateOf(ymdStr).getDay()]);
+  const st12 = (d) => `${d.getHours() % 12 || 12}${d.getMinutes() ? ":" + String(d.getMinutes()).padStart(2, "0") : ""}${d.getHours() < 12 ? "a" : "p"}`;
+  const shortHours = (d) => (d.showEnd ? `${st12(new Date(d.start))}–${st12(new Date(d.end))}` : `from ${st12(new Date(d.start))}`);
+  let dayFilter = "all"; // week mode: "all" or a YYYY-MM-DD
+
+  // sale days that are not over yet
+  const remainingDays = (s) => { const now = new Date(); return s.days.filter((d) => new Date(d.end) > now); };
+  const onDay = (s, day) => remainingDays(s).some((d) => ymd(new Date(d.start)) === day);
+  function weekDays() {
+    const c = {};
+    for (const s of sales) for (const d of remainingDays(s)) { const k = ymd(new Date(d.start)); c[k] = (c[k] || 0) + 1; }
+    return Object.entries(c).sort(([a], [b]) => a.localeCompare(b));
+  }
 
   function dayOf(s) {
-    if (DATA.upcomingMode) {
+    if (wk) {
+      if (dayFilter !== "all") return s.days.find((d) => ymd(new Date(d.start)) === dayFilter);
       const now = new Date();
       return s.days.find((d) => new Date(d.end) > now) || s.days[0];
     }
@@ -648,6 +777,10 @@ function startApp(DATA) {
   const sales = DATA.sales || [];
   const shown = { open: true, soon: true, na: true, closed: false };
   let onlyMatches = false;
+  let onlyFav = false;
+  const hereDismissed = new Set();
+  let renderedDetailId = null;
+  let listMode = "sales"; // or "history"
   let sort = "near";
   let activeId = null;
   let detailId = null;
@@ -658,8 +791,20 @@ function startApp(DATA) {
   let lbItems = []; // [{ full, cap }]
   let lbIdx = 0;
 
+  const isFav = (s) => Boolean(Marks.get("f", s.id));
+  const seenMark = (s) => Marks.get("v", s.id);
+  function passes(s) {
+    if (wk) {
+      if (dayFilter !== "all" ? !onDay(s, dayFilter) : !remainingDays(s).length) return false;
+    } else if (!shown[status(s).k]) return false;
+    if (onlyMatches && !hasMatches(s)) return false;
+    if (onlyFav && !isFav(s)) return false;
+    return true;
+  }
+  const primaryDay = (s) => { const d = dayOf(s); return d ? ymd(new Date(d.start)) : "9999"; };
+
   function visible() {
-    const list = sales.filter((s) => shown[status(s).k] && (!onlyMatches || hasMatches(s)));
+    const list = sales.filter(passes);
     const by = {
       near: (a, b) => (miles(a) ?? 1e9) - (miles(b) ?? 1e9),
       match: (a, b) => (matchCount(b) - matchCount(a)) || ((miles(a) ?? 1e9) - (miles(b) ?? 1e9)),
@@ -668,12 +813,24 @@ function startApp(DATA) {
       start: (a, b) => (new Date(dayOf(a)?.start ?? 8.64e15)) - (new Date(dayOf(b)?.start ?? 8.64e15)),
     };
     const key = sort === "near" && !me ? "size" : sort;
-    return list.sort(by[key]);
+    const cmp = by[key];
+    const seenLast = (a, b) => Number(Boolean(seenMark(a))) - Number(Boolean(seenMark(b)));
+    // week view: group by day first so the list and the swipe order go Fri -> Sat -> Sun
+    if (wk && dayFilter === "all") return list.sort((a, b) => primaryDay(a).localeCompare(primaryDay(b)) || seenLast(a, b) || cmp(a, b));
+    return list.sort((a, b) => seenLast(a, b) || cmp(a, b));
   }
 
   function pinLabel(s) {
     const m = miles(s);
     const star = hasMatches(s) ? "★ " : "";
+    if (wk) {
+      const d = dayOf(s);
+      if (d) {
+        const st = new Date(d.start);
+        if (status(s).k === "open") return `${star}til ${st12(new Date(d.end))}`;
+        return `${star}${dayFilter === "all" ? dayName(ymd(st)) + " " : ""}${st12(st)}`;
+      }
+    }
     if (sort === "near" && m != null) return `${star}${fmtMi(m)} mi`;
     if (sort === "size" && s.sqft) return `${star}${shortSqft(s.sqft)}`;
     if (s.value) return `${star}${money(s.value)}`;
@@ -698,27 +855,30 @@ function startApp(DATA) {
     for (const s of sales) {
       const mk = pins.get(s.id); if (!mk) continue;
       const st = status(s).k;
-      const isVis = (shown[st] && (!onlyMatches || hasMatches(s))) || activeId === s.id;
+      const isVis = passes(s) || activeId === s.id;
       if (!isVis) { if (map.hasLayer(mk)) map.removeLayer(mk); continue; }
       if (!map.hasLayer(mk)) mk.addTo(map);
       const lbl = pinLabel(s);
       const matched = hasMatches(s);
-      const sig = `${st}|${matched}|${lbl}`;
+      const fav = isFav(s), seen = Boolean(seenMark(s));
+      const dc = dayColor(primaryDay(s) === "9999" ? DATA.date : primaryDay(s));
+      const sig = `${st}|${matched}|${lbl}|${fav}|${seen}|${dc}`;
       if (pinCache.get(s.id) !== sig) {
         pinCache.set(s.id, sig);
-        const html = `<div class="pill-pin ${st} ${matched ? "matched" : ""}"><span class="dot"></span><span>${esc(lbl)}</span></div>`;
+        const cls = [st, matched && "matched", wk && "wk", st === "open" && "live", seen && "seen"].filter(Boolean).join(" ");
+        const html = `<div class="pill-pin ${cls}" style="--dc:${dc}"><span class="dot"></span>${fav ? `<span class="fv">♥</span>` : ""}<span>${esc(lbl)}${seen ? " ✓" : ""}</span></div>`;
         mk.setIcon(L.divIcon({ className: "pin-wrap", html, iconSize: [0, 0], iconAnchor: [0, 0] }));
       }
       const el = mk.getElement();
       if (el) el.classList.toggle("sel", activeId === s.id);
-      mk.setZIndexOffset(activeId === s.id ? 1000 : matched ? 500 : st === "open" ? 200 : st === "soon" ? 100 : 0);
+      mk.setZIndexOffset(activeId === s.id ? 1000 : seen ? -100 : fav ? 600 : matched ? 500 : st === "open" ? 200 : st === "soon" ? 100 : 0);
     }
   }
 
   function mapPadding() {
     if (innerWidth >= 860) return { tl: [442, 40], br: [68, 40] };
     const cardsHidden = document.body.classList.contains("cards-hidden");
-    return { tl: [58, 72], br: [70, cardsHidden ? 68 : 176] };
+    return { tl: [58, 112], br: [70, cardsHidden ? 68 : 176] };
   }
   function fitAll(animate = true) {
     const pts = visible().filter((s) => s.lat != null).map((s) => [s.lat, s.lng]);
@@ -852,9 +1012,119 @@ function startApp(DATA) {
     return `<div class="mtags">${entries.map(([t, arr]) => `<span class="mtag">★ ${esc(t)} (${arr.length})</span>`).join("")}</div>`;
   }
 
+  // "Sat 8a–2p" headline with a weekday-coloured tag
+  function whenHtml(s) {
+    const d = dayOf(s), st = status(s);
+    if (!d) return `<span class="when"><span>Hours TBA</span></span>`;
+    const dy = ymd(new Date(d.start));
+    const tag = `<span class="dtag" style="--dc:${dayColor(dy)}">${dayName(dy)}</span>`;
+    let txt;
+    if (st.k === "open") txt = `<span class="live">Open now · til ${st12(new Date(d.end))}</span>`;
+    else if (st.k === "closed") txt = `<span class="ended">${esc(st.label)}</span>`;
+    else txt = `<span>${shortHours(d)}</span>`;
+    const rem = remainingDays(s);
+    const span = wk && dayFilter === "all" && rem.length > 1 ? `<span class="span">→ ${WEEKDAY[new Date(rem[rem.length - 1].start).getDay()]}</span>` : "";
+    return `<span class="when">${tag}${txt}${span}</span>`;
+  }
+  function addrNote(s) {
+    if (s.address) return "";
+    if (s.addrAt) { const a = new Date(s.addrAt); return `📍 address ${a > new Date() ? `${WEEKDAY[a.getDay()]} ${st12(a)}` : "soon"}`; }
+    return "📍 address not posted yet";
+  }
+  function badgesHtml(s) {
+    const v = seenMark(s);
+    return (s.isNew ? `<span class="badge new">NEW</span>` : "") + (v ? `<span class="badge seen">✓ BEEN</span>` : "");
+  }
+
+  function markVal(s) {
+    const d = dayOf(s) || s.days[0] || {};
+    return { n: s.name, c: s.city, d: d.start || null, u: s.url, p: s.photo || null, t: Date.now() };
+  }
+  function haptic(kind) { if (inTMA) tg.HapticFeedback?.notificationOccurred?.(kind); }
+  function toggleFav(s) {
+    const on = !isFav(s);
+    Marks.set("f", s.id, on ? markVal(s) : null);
+    haptic(on ? "success" : "warning");
+    render();
+  }
+  function toggleSeen(s) {
+    const on = !seenMark(s);
+    Marks.set("v", s.id, on ? markVal(s) : null);
+    haptic(on ? "success" : "warning");
+    if (on) hereDismissed.add(s.id);
+    render();
+  }
+
+  // Route: today's/selected day's sales you haven't been to, nearest-first from where you are.
+  function routeStops() {
+    if (wk && dayFilter === "all") return [];
+    if (!wk && !isToday()) return [];
+    let pool = visible().filter((s) => s.lat != null && !seenMark(s) && status(s).k !== "closed");
+    const out = [];
+    let cur = me;
+    if (!cur && pool.length) {
+      pool.sort((a, b) => new Date(dayOf(a)?.start ?? 8.64e15) - new Date(dayOf(b)?.start ?? 8.64e15));
+      out.push(pool.shift()); cur = out[0];
+    }
+    while (pool.length && out.length < 10) {
+      const dist = (s) => (s.lat - cur.lat) ** 2 + ((s.lng - cur.lng) * Math.cos(cur.lat * Math.PI / 180)) ** 2;
+      pool.sort((a, b) => dist(a) - dist(b));
+      cur = pool.shift(); out.push(cur);
+    }
+    return out;
+  }
+  function routeUrl(stops) {
+    const enc = (s) => encodeURIComponent(s.address || `${s.lat},${s.lng}`);
+    const dest = stops[stops.length - 1];
+    const wps = stops.slice(0, -1).map(enc).join("%7C");
+    return `https://www.google.com/maps/dir/?api=1&destination=${enc(dest)}&travelmode=driving${wps ? `&waypoints=${wps}` : ""}`;
+  }
+
+  // Filter chips shared by the map (mobile) and the list panel
+  function chipsHtml() {
+    const stops = routeStops();
+    let h = stops.length > 1 ? `<button class="chip route-chip" data-route="1">🚗 Route ${stops.length}</button>` : "";
+    if (wk) {
+      const days = weekDays();
+      if (days.length > 1) {
+        h += `<button class="chip radio all" data-day="all" aria-pressed="${dayFilter === "all"}">All ${sales.filter((s) => remainingDays(s).length).length}</button>`;
+        h += days.map(([d, n]) => `<button class="chip radio day" data-day="${d}" style="--dc:${dayColor(d)}" aria-pressed="${dayFilter === d}"><span class="dot"></span>${dayName(d)} ${n}</button>`).join("");
+      }
+    } else {
+      const c = counts();
+      const nonZero = ["open", "soon", "closed", "na"].filter((k) => c[k] > 0);
+      if (nonZero.length > 1) h += nonZero.map((k) => `<button class="chip" data-k="${k}" aria-pressed="${shown[k]}"><span class="dot" style="background:var(--${k})"></span>${LABEL[k]} ${c[k]}</button>`).join("");
+    }
+    const favN = sales.filter(isFav).length;
+    if (favN || onlyFav) h += `<button class="chip fav-chip" data-fav="1" aria-pressed="${onlyFav}">♥ Saved ${favN}</button>`;
+    const totalMatched = sales.filter(hasMatches).length;
+    if (totalMatched) h += `<button class="chip match-chip" data-match="1" aria-pressed="${onlyMatches}">★ Matches ${totalMatched}</button>`;
+    h += `<button class="chip hist-chip" data-hist="1">🕘 History</button>`;
+    return h;
+  }
+  function bindChips(root) {
+    for (const b of root.querySelectorAll(".chip")) {
+      b.onclick = () => {
+        const ds = b.dataset;
+        if (ds.day) { dayFilter = ds.day; afterFilter(); }
+        else if (ds.k) { shown[ds.k] = !shown[ds.k]; render(); }
+        else if (ds.fav) { onlyFav = !onlyFav; afterFilter(); }
+        else if (ds.match) { onlyMatches = !onlyMatches; afterFilter(); }
+        else if (ds.route) { const st = routeStops(); if (st.length) openExternal(routeUrl(st)); }
+        else if (ds.hist) { listMode = "history"; setListOpen(true); render(); }
+      };
+    }
+  }
+  function afterFilter() {
+    const list = visible();
+    if (!list.some((s) => s.id === activeId)) activeId = list[0]?.id ?? null;
+    if (inTMA) tg.HapticFeedback?.selectionChanged?.();
+    render(); fitAll(true);
+  }
+
   function syncBackButton() {
     if (!inTMA || !tg.BackButton) return;
-    if ($("#lightbox").classList.contains("open") || detailId || listOpen) tg.BackButton.show();
+    if ($("#lightbox").classList.contains("open") || detailId || listOpen || listMode === "history") tg.BackButton.show();
     else tg.BackButton.hide();
   }
 
@@ -883,22 +1153,23 @@ function startApp(DATA) {
 
   // ---------- rendering ----------
   function renderHeaders() {
-    const dayStr = DATA.upcomingMode ? "Upcoming" : dFmt.format(pageDay);
+    const rangeStr = DATA.range ? `${dFmt.format(dateOf(DATA.range[0]))} – ${dFmt.format(dateOf(DATA.range[1]))}` : "";
+    const dayStr = wk
+      ? (dayFilter !== "all" ? (dayFilter === ymd(new Date()) ? "Today" : dFmt.format(dateOf(dayFilter))) : DATA.range ? "This week" : "Upcoming")
+      : (isToday() ? "Today" : dFmt.format(pageDay));
     const gen = new Date(DATA.generated);
-    const genStr = ymd(gen) === DATA.date || ymd(gen) === ymd(new Date()) ? time(gen) : dFmt.format(gen);
-    const totalMatched = sales.filter(hasMatches).length;
+    const genStr = ymd(gen) === ymd(new Date()) ? `updated ${time(gen)}` : `updated ${dFmt.format(gen)}`;
+    const n = visible().length;
     $("#m-title").textContent = dayStr;
-    $("#m-cnt").textContent = `· ${sales.length}`;
-    $("#l-title").textContent = dayStr;
-    $("#l-sub").textContent = `${sales.length} sales${totalMatched ? ` · ★ ${totalMatched} matched` : ""} · ${genStr}`;
+    $("#m-cnt").textContent = `· ${n}`;
+    $("#l-title").textContent = listMode === "history" ? "Saved & visited" : dayStr;
+    $("#l-sub").textContent = listMode === "history" ? "Synced through Telegram" : [rangeStr && dayFilter === "all" ? rangeStr : "", `${n} sales`, genStr].filter(Boolean).join(" · ");
     $("#m-sort").value = sort;
-    $("#reopen-cards").textContent = `Show ${visible().length} sales`;
-
-    const mf = $("#m-match");
-    mf.classList.toggle("show", totalMatched > 0);
-    mf.classList.toggle("on", onlyMatches);
-    mf.setAttribute("aria-pressed", String(onlyMatches));
-    mf.textContent = `★ ${totalMatched}`;
+    $("#reopen-cards").textContent = `Show ${n} sales`;
+    const mc = $("#m-chips"), sl = mc.scrollLeft;
+    mc.innerHTML = chipsHtml();
+    bindChips(mc);
+    mc.scrollLeft = sl;
 
     updateLocateFab();
     renderGeoToast();
@@ -911,27 +1182,31 @@ function startApp(DATA) {
     if (!list.some((s) => s.id === activeId)) activeId = list[0].id;
 
     wrap.innerHTML = list.map((s, idx) => {
-      const st = status(s), m = miles(s);
+      const m = miles(s);
       const bits = [];
-      if (s.value) bits.push(money(s.value));
       if (s.sqft) bits.push(`${num(s.sqft)} sf`);
+      if (s.value) bits.push(money(s.value));
       if (s.year) bits.push(s.year);
-      return `<article class="pcard ${s.id === activeId ? "active" : ""}" data-id="${s.id}">
+      const note = addrNote(s);
+      return `<article class="pcard ${s.id === activeId ? "active" : ""} ${seenMark(s) ? "seen" : ""}" data-id="${s.id}">
         <div class="pthumb">
           ${s.photo ? `<img src="${esc(s.photo)}" alt="" loading="lazy" decoding="async">` : ICONS.house}
-          <span class="sdot" style="background:var(--${st.k})"></span>
+          ${isFav(s) ? `<span class="fav-flag">♥</span>` : ""}
         </div>
         <div class="pbody">
-          <div class="ptop">
+          <div class="ptop">${whenHtml(s)}<span class="pidx">${idx + 1}/${list.length}</span></div>
+          <div class="pwhere">
             ${m != null ? `<span class="pmi">${fmtMi(m)} mi</span>` : ""}
-            <span class="pst ${st.k === "open" ? "live" : ""}">${esc(s.city)} · ${esc(st.label)}</span>
-            <span class="pidx">${idx + 1}/${list.length}</span>
+            <span class="city">${esc(s.city)}</span>${badgesHtml(s)}
+            ${note ? `<span class="hid">· ${esc(note)}</span>` : ""}
           </div>
-          <h2>${esc(s.name)}</h2>
-          ${hasMatches(s) ? matchTagsHtml(s, 2) : (s.summary ? `<div class="psum">${esc(s.summary)}</div>` : "")}
+          ${hasMatches(s) ? matchTagsHtml(s, 2) : `<div class="pname">${esc(s.summary || s.name)}</div>`}
           <div class="pbot">
             <span class="pfacts">${esc(bits.join(" · "))}</span>
-            <a class="pdir" href="${esc(mapsLink(s))}" data-ext="1" target="_blank" rel="noopener">${ICONS.nav}Go</a>
+            <span class="right">
+              <button class="heart ${isFav(s) ? "on" : ""}" data-fav="${s.id}" aria-label="${isFav(s) ? "Unsave" : "Save"}">${isFav(s) ? "♥" : "♡"}</button>
+              <a class="pdir" href="${esc(mapsLink(s))}" data-ext="1" target="_blank" rel="noopener">${ICONS.nav}Go</a>
+            </span>
           </div>
         </div>
       </article>`;
@@ -939,6 +1214,8 @@ function startApp(DATA) {
 
     for (const card of wrap.querySelectorAll(".pcard")) {
       card.onclick = (e) => {
+        const hb = e.target.closest("[data-fav]");
+        if (hb) { e.stopPropagation(); toggleFav(sales.find((x) => x.id === +hb.dataset.fav)); return; }
         const a = e.target.closest("a[data-ext]");
         if (a) { if (inTMA && tg.openLink) { e.preventDefault(); openExternal(a.href); } return; }
         openDetail(+card.dataset.id);
@@ -972,65 +1249,80 @@ function startApp(DATA) {
     }, 90);
   }, { passive: true });
 
-  function renderListPanel() {
-    const c = counts();
-    const totalMatched = sales.filter(hasMatches).length;
-    const nonZero = ["open", "soon", "closed", "na"].filter((k) => c[k] > 0);
-    let chipsHtml = `<div class="chips">`;
-    if (totalMatched > 0) {
-      chipsHtml += `<button class="chip match-chip" id="l-match" aria-pressed="${onlyMatches}">★ Matches ${totalMatched}</button>`;
-    }
-    if (nonZero.length > 1) {
-      chipsHtml += nonZero.map((k) => `<button class="chip" data-k="${k}" aria-pressed="${shown[k]}"><span class="dot" style="background:var(--${k})"></span>${LABEL[k]} ${c[k]}</button>`).join("");
-    }
-    chipsHtml += `</div>`;
-
-    $("#lbar").innerHTML = `${chipsHtml}<select class="sort-pill" id="l-sort" style="height:30px;box-shadow:none;background-color:var(--wash);border:0">
+  function sortSelectHtml() {
+    return `<select class="sort-pill" id="l-sort" style="height:30px;box-shadow:none;background-color:var(--wash);border:0;flex:none">
       <option value="near">Nearest</option>
+      <option value="start">Opens</option>
       <option value="match">Matches</option>
       <option value="size">Biggest</option>
       <option value="value">Value</option>
-      <option value="start">Opens</option>
     </select>`;
+  }
+
+  function listRowHtml(s) {
+    const m = miles(s);
+    const f = [];
+    if (m != null) f.push(`<span class="mi">${fmtMi(m)} mi</span>`);
+    if (s.sqft) f.push(`<span>${num(s.sqft)} sf</span>`);
+    if (s.value) f.push(`<span>${money(s.value)}</span>`);
+    const note = addrNote(s);
+    return `<div class="lrow ${seenMark(s) ? "seen" : ""}" data-id="${s.id}" role="button" tabindex="0">
+      <span class="thumb">
+        ${s.photo ? `<img src="${esc(s.photo)}" alt="" loading="lazy" decoding="async">` : ICONS.house}
+        ${isFav(s) ? `<span class="fav-flag">♥</span>` : ""}
+      </span>
+      <span class="lrow-main">
+        ${whenHtml(s)}
+        <h2>${esc(s.city)}${badgesHtml(s) ? " " + badgesHtml(s) : ""}</h2>
+        <div class="sub">${esc(note || s.summary || s.name)}</div>
+        ${matchTagsHtml(s, 3)}
+        ${f.length ? `<div class="facts">${f.join("")}</div>` : ""}
+      </span>
+      <span class="side">
+        <button class="heart ${isFav(s) ? "on" : ""}" data-fav="${s.id}" aria-label="${isFav(s) ? "Unsave" : "Save"}">${isFav(s) ? "♥" : "♡"}</button>
+        <a class="dir-ic" href="${esc(mapsLink(s))}" data-ext="1" target="_blank" rel="noopener" aria-label="Directions">${ICONS.nav}</a>
+      </span>
+    </div>`;
+  }
+
+  function renderListPanel() {
+    if (listMode === "history") return renderHistory();
+    const lb = $("#lbar"), sl = lb.querySelector(".chips")?.scrollLeft || 0;
+    lb.innerHTML = `<div class="chips">${chipsHtml()}</div>${sortSelectHtml()}`;
+    bindChips(lb);
+    lb.querySelector(".chips").scrollLeft = sl;
     $("#l-sort").value = sort;
     $("#l-sort").onchange = (e) => changeSort(e.target.value);
-    $("#l-match")?.addEventListener("click", () => { onlyMatches = !onlyMatches; render(); fitAll(true); });
-    for (const b of document.querySelectorAll("#lbar .chip[data-k]")) {
-      b.onclick = () => { shown[b.dataset.k] = !shown[b.dataset.k]; render(); };
-    }
 
     const list = visible();
     if (!list.length) {
       $("#lscroll").innerHTML = `<p class="empty">No matching sales.<br><button id="showall">Show all</button></p>`;
-      $("#showall")?.addEventListener("click", () => { onlyMatches = false; for (const k in shown) shown[k] = true; render(); });
+      $("#showall")?.addEventListener("click", () => { onlyMatches = false; onlyFav = false; dayFilter = "all"; for (const k in shown) shown[k] = true; render(); });
       return;
     }
-    $("#lscroll").innerHTML = list.map((s) => {
-      const st = status(s), m = miles(s);
-      const f = [];
-      if (m != null) f.push(`<span class="mi">${fmtMi(m)} mi</span>`);
-      if (s.value) f.push(`<span>${money(s.value)}</span>`);
-      if (s.sqft) f.push(`<span>${num(s.sqft)} sf</span>`);
-      if (s.year) f.push(`<span>${s.year}</span>`);
-      const live = st.k === "open" ? `<span class="live">${esc(st.label)}</span>` : esc(st.label);
-      return `<div class="lrow" data-id="${s.id}" role="button" tabindex="0">
-        <span class="thumb">
-          ${s.photo ? `<img src="${esc(s.photo)}" alt="" loading="lazy" decoding="async">` : ICONS.house}
-          <span class="sdot" style="background:var(--${st.k})"></span>
-        </span>
-        <span class="lrow-main">
-          <h2>${esc(s.name)}</h2>
-          <div class="sub">${esc(s.city)} · ${live}</div>
-          ${matchTagsHtml(s, 3)}
-          ${s.summary ? `<div class="lsum">${esc(s.summary)}</div>` : ""}
-          ${f.length ? `<div class="facts">${f.join("")}</div>` : ""}
-        </span>
-        <a class="dir-ic" href="${esc(mapsLink(s))}" data-ext="1" target="_blank" rel="noopener" aria-label="Directions">${ICONS.nav}</a>
-      </div>`;
-    }).join("");
+    let html = "", lastDay = null;
+    const group = wk && dayFilter === "all";
+    for (const s of list) {
+      if (group) {
+        const d = primaryDay(s);
+        if (d !== lastDay) {
+          lastDay = d;
+          const n = list.filter((x) => primaryDay(x) === d).length;
+          const label = d === ymd(new Date()) ? "Today" : dFmt.format(dateOf(d));
+          html += `<div class="dayhead" style="--dc:${dayColor(d)}">${esc(label)} <span class="n">· ${n}</span></div>`;
+        }
+      }
+      html += listRowHtml(s);
+    }
+    $("#lscroll").innerHTML = html;
+    bindRows($("#lscroll"));
+  }
 
-    for (const r of document.querySelectorAll("#lscroll .lrow")) {
+  function bindRows(root) {
+    for (const r of root.querySelectorAll(".lrow[data-id]")) {
       r.onclick = (e) => {
+        const hb = e.target.closest("[data-fav]");
+        if (hb) { e.stopPropagation(); toggleFav(sales.find((x) => x.id === +hb.dataset.fav)); return; }
         const a = e.target.closest("a[data-ext]");
         if (a) { if (inTMA && tg.openLink) { e.preventDefault(); openExternal(a.href); } return; }
         openDetail(+r.dataset.id);
@@ -1038,9 +1330,52 @@ function startApp(DATA) {
     }
   }
 
+  // Saved + visited, including past sales that are no longer in this week's data
+  function renderHistory() {
+    $("#lbar").innerHTML = `<div class="chips"><button class="chip hist-back" id="h-back">← Back to sales</button></div>`;
+    $("#h-back").onclick = () => { listMode = "sales"; if (innerWidth < 860) setListOpen(false); render(); };
+    const now = new Date();
+    const favs = Marks.all("f").sort((a, b) => {
+      const pa = a.d && new Date(a.d) < now, pb = b.d && new Date(b.d) < now;
+      return (pa - pb) || (pa ? new Date(b.d) - new Date(a.d) : new Date(a.d || 0) - new Date(b.d || 0));
+    });
+    const seen = Marks.all("v").sort((a, b) => b.t - a.t);
+    const row = (m, kind) => {
+      const live = sales.find((x) => x.id === m.id);
+      const past = !live && m.d && new Date(m.d) < now;
+      const when = kind === "v" ? `Been here ${dFmt.format(new Date(m.t))}` : m.d ? dFmt.format(new Date(m.d)) : "";
+      const tail = live ? "on the map" : past ? "ended" : "";
+      return `<div class="lrow hrow ${past ? "past" : ""}" data-hid="${m.id}" data-kind="${kind}" role="button" tabindex="0">
+        <span class="thumb">${m.p ? `<img src="${esc(m.p)}" alt="" loading="lazy">` : ICONS.house}</span>
+        <span class="lrow-main"><h2>${esc(m.n || "Estate sale")}</h2>
+          <div class="sub">${esc([m.c, when, tail].filter(Boolean).join(" · "))}</div></span>
+        <button class="xbtn" data-rm="1" aria-label="Remove">✕</button>
+      </div>`;
+    };
+    $("#lscroll").innerHTML =
+      `<div class="hsec">♥ Saved · ${favs.length}</div>` +
+      (favs.length ? favs.map((m) => row(m, "f")).join("") : `<p class="hempty">Tap ♡ on any sale to keep track of it here.</p>`) +
+      `<div class="hsec">✓ Been to · ${seen.length}</div>` +
+      (seen.length ? seen.map((m) => row(m, "v")).join("") : `<p class="hempty">Open a sale and tap “Mark visited” — or it'll ask when you're standing at one.</p>`);
+    for (const r of document.querySelectorAll("#lscroll .hrow")) {
+      r.onclick = (e) => {
+        const id = +r.dataset.hid, kind = r.dataset.kind;
+        if (e.target.closest("[data-rm]")) {
+          const m = Marks.get(kind, id);
+          const doIt = () => { Marks.set(kind, id, null); render(); };
+          const msg = `Remove “${m?.n || "this sale"}” from ${kind === "f" ? "Saved" : "Been to"}?`;
+          if (inTMA && tg.showConfirm) tg.showConfirm(msg, (ok) => ok && doIt()); else if (confirm(msg)) doIt();
+          return;
+        }
+        if (sales.some((x) => x.id === id)) openDetail(id);
+        else { const m = Marks.get(kind, id); if (m?.u) openExternal(m.u); }
+      };
+    }
+  }
+
   function renderDetail() {
     const bd = $("#detail-backdrop");
-    if (!detailId) { bd.classList.remove("open"); syncBackButton(); return; }
+    if (!detailId) { bd.classList.remove("open"); renderedDetailId = null; syncBackButton(); return; }
     const list = visible();
     const idx = list.findIndex((s) => s.id === detailId);
     const s = sales.find((x) => x.id === detailId);
@@ -1062,8 +1397,8 @@ function startApp(DATA) {
       focusPin(s.id, true, true);
     };
     if (idx >= 0) {
-      $("#d-prev").onclick = () => openDetail(list[idx - 1].id);
-      $("#d-next").onclick = () => openDetail(list[idx + 1].id);
+      $("#d-prev").onclick = () => stepDetail(-1);
+      $("#d-next").onclick = () => stepDetail(1);
     }
 
     const st = status(s), m = miles(s);
@@ -1114,8 +1449,10 @@ function startApp(DATA) {
       </a>
       <h2>${esc(s.name)}</h2>
       <div class="meta-pills">
-        <span class="mpill"><span class="dot" style="background:var(--${st.k})"></span>${esc(st.label)}${st.sub ? ` · ${esc(st.sub)}` : ""}</span>
+        ${dayOf(s) ? `<span class="mpill day" style="--dc:${dayColor(ymd(new Date(dayOf(s).start)))}">${dayName(ymd(new Date(dayOf(s).start)))} ${shortHours(dayOf(s))}</span>` : ""}
+        ${!dayOf(s) || st.k !== "soon" ? `<span class="mpill"><span class="dot" style="background:var(--${st.k})"></span>${esc(st.label)}${st.sub ? ` · ${esc(st.sub)}` : ""}</span>` : ""}
         ${m != null ? `<span class="mpill dist">${fmtMi(m)} mi away</span>` : ""}
+        ${s.isNew ? `<span class="badge new">NEW</span>` : ""}
       </div>
       ${s.address
         ? `<button class="addr-btn" id="copy-addr"><span>${esc(s.address)}</span><span id="copy-lbl">Copy</span></button>`
@@ -1125,6 +1462,10 @@ function startApp(DATA) {
         <a class="btn" href="${esc(s.url)}" data-ext="1" target="_blank" rel="noopener">Listing</a>
         ${zillow ? `<a class="btn" href="${esc(zillow)}" data-ext="1" target="_blank" rel="noopener">Zillow</a>` : `<span class="btn disabled">Zillow</span>`}
       </div>
+      <div class="marks">
+        <button class="btn ${isFav(s) ? "fav-on" : ""}" id="d-fav">${isFav(s) ? "♥ Saved" : "♡ Save"}</button>
+        <button class="btn ${seenMark(s) ? "seen-on" : ""}" id="d-seen">${seenMark(s) ? `✓ Been here · ${dFmt.format(new Date(seenMark(s).t))}` : "✓ Mark visited"}</button>
+      </div>
       ${matchesHtml}
       ${summaryHtml}
       ${cells.length ? `<h3 class="sec">House record · county parcel</h3>
@@ -1132,11 +1473,16 @@ function startApp(DATA) {
         : `<p class="host" style="margin-bottom:16px">No county parcel record matched this address.</p>`}
       ${s.days.length ? `<h3 class="sec">Sale hours</h3><ul class="days">${s.days.map((d) => {
         const day = ymd(new Date(d.start));
-        return `<li class="${day === DATA.date ? "today" : day < today ? "past" : ""}"><span>${dFmt.format(new Date(d.start))}</span><span>${hours(d)}</span></li>`;
+        const hl = wk ? day === (dayFilter !== "all" ? dayFilter : primaryDay(s)) : day === DATA.date;
+        return `<li class="${hl ? "today" : day < today ? "past" : ""}"><span>${dFmt.format(new Date(d.start))}</span><span>${hours(d)}</span></li>`;
       }).join("")}</ul>` : ""}
       <p class="host">Hosted by ${esc(s.org || "an independent seller")}</p>
+      ${idx >= 0 && list.length > 1 ? `<p class="swipe-hint">Swipe left or right for the next sale</p>` : ""}
     `;
-    $("#dscroll").scrollTop = 0;
+    if (renderedDetailId !== s.id) $("#dscroll").scrollTop = 0;
+    renderedDetailId = s.id;
+    $("#d-fav").onclick = () => toggleFav(s);
+    $("#d-seen").onclick = () => toggleSeen(s);
 
     for (const btn of document.querySelectorAll("#dscroll .mshot")) {
       btn.onclick = () => openLightbox(allLb, +btn.dataset.lb);
@@ -1149,7 +1495,79 @@ function startApp(DATA) {
     }
   }
 
+  // Swipe left/right in the detail sheet to move through the listings (same order as the list)
+  function neighbour(dir) {
+    const list = visible();
+    const i = list.findIndex((s) => s.id === detailId);
+    return i < 0 ? null : list[i + dir] || null;
+  }
+  function stepDetail(dir, fromSwipe = false) {
+    const nb = neighbour(dir);
+    if (!nb) return false;
+    const el = $("#dscroll");
+    el.classList.add("snap");
+    el.style.transform = `translateX(${dir > 0 ? -innerWidth : innerWidth}px)`;
+    el.style.opacity = "0";
+    if (inTMA) tg.HapticFeedback?.selectionChanged?.();
+    setTimeout(() => {
+      el.classList.remove("snap");
+      el.style.transform = `translateX(${dir > 0 ? innerWidth * 0.3 : -innerWidth * 0.3}px)`;
+      openDetail(nb.id);
+      focusPin(nb.id, true, false);
+      requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.add("snap"); el.style.transform = ""; el.style.opacity = ""; }));
+    }, fromSwipe ? 150 : 120);
+    return true;
+  }
+  (() => {
+    const el = $("#dscroll");
+    let x0 = 0, y0 = 0, dx = 0, mode = null; // null = undecided, "h" = paging, "v" = scrolling
+    el.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1 || e.target.closest(".mstrip")) { mode = "v"; return; }
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; mode = null;
+      el.classList.remove("snap");
+    }, { passive: true });
+    el.addEventListener("touchmove", (e) => {
+      if (mode === "v") return;
+      const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+      if (!mode) {
+        if (Math.abs(mx) < 10 && Math.abs(my) < 10) return;
+        mode = Math.abs(mx) > Math.abs(my) * 1.2 ? "h" : "v";
+        if (mode === "v") return;
+      }
+      dx = mx;
+      const resist = neighbour(dx < 0 ? 1 : -1) ? 1 : 0.25; // rubber-band at the first/last sale
+      el.style.transform = `translateX(${dx * resist}px)`;
+      el.style.opacity = String(1 - Math.min(Math.abs(dx * resist) / 700, 0.35));
+    }, { passive: true });
+    const end = () => {
+      if (mode !== "h") { mode = null; return; }
+      mode = null;
+      if (Math.abs(dx) > Math.min(80, innerWidth * 0.2) && stepDetail(dx < 0 ? 1 : -1, true)) return;
+      el.classList.add("snap"); el.style.transform = ""; el.style.opacity = "";
+    };
+    el.addEventListener("touchend", end);
+    el.addEventListener("touchcancel", end);
+    addEventListener("keydown", (e) => {
+      if (!detailId || $("#lightbox").classList.contains("open")) return;
+      if (e.key === "ArrowRight") stepDetail(1);
+      else if (e.key === "ArrowLeft") stepDetail(-1);
+    });
+  })();
+
+  // "You're at a sale" prompt: within ~200 m of an open sale you haven't marked
+  function checkHere() {
+    const el = $("#here-toast");
+    const s = me && sales.find((x) => !seenMark(x) && !hereDismissed.has(x.id) && status(x).k === "open" && (miles(x) ?? 9) < 0.12);
+    if (!s) { el.classList.add("hidden"); return; }
+    el.classList.remove("hidden");
+    el.innerHTML = `<span>📍 At the ${esc(s.city)} sale?</span><span class="tacts">
+      <button class="tbtn primary" id="ht-yes">✓ Mark visited</button><button class="tbtn" id="ht-x">✕</button></span>`;
+    $("#ht-yes").onclick = () => toggleSeen(s);
+    $("#ht-x").onclick = () => { hereDismissed.add(s.id); checkHere(); };
+  }
+
   function render() {
+    checkHere();
     renderHeaders();
     drawPins();
     renderCarousel();
@@ -1168,7 +1586,12 @@ function startApp(DATA) {
   }
   function openDetail(id) { activeId = id; detailId = id; drawPins(); renderDetail(); }
   function closeDetail() { detailId = null; renderDetail(); }
-  function setListOpen(open) { listOpen = open; document.body.classList.toggle("view-list", open); syncBackButton(); }
+  function setListOpen(open) {
+    listOpen = open;
+    if (!open && listMode === "history") { listMode = "sales"; render(); }
+    document.body.classList.toggle("view-list", open);
+    syncBackButton();
+  }
   function changeSort(next) {
     sort = next;
     if (next === "near" && !me) requestLocation(true);
@@ -1178,7 +1601,6 @@ function startApp(DATA) {
   }
 
   $("#m-sort").onchange = (e) => changeSort(e.target.value);
-  $("#m-match").onclick = () => { onlyMatches = !onlyMatches; render(); fitAll(true); };
   $("#open-list").onclick = () => setListOpen(true);
   $("#close-list").onclick = () => setListOpen(false);
   $("#fab-locate").onclick = () => requestLocation(true);
@@ -1199,12 +1621,16 @@ function startApp(DATA) {
       if ($("#lightbox").classList.contains("open")) closeLightbox();
       else if (detailId) closeDetail();
       else if (listOpen) setListOpen(false);
+      else if (listMode === "history") { listMode = "sales"; render(); }
     });
   }
   setInterval(render, 60000);
 
   if (!isToday() || DATA.upcomingMode) shown.closed = true;
   else if (!sales.some((s) => ["open", "soon"].includes(status(s).k))) shown.closed = true;
+  const dayParam = URL_PARAMS.get("day");
+  if (wk && dayParam && weekDays().some(([d]) => d === dayParam)) dayFilter = dayParam;
+  Marks.sync(() => { pinCache.clear(); render(); });
 
   const focusParam = Number(URL_PARAMS.get("focus"));
   if (focusParam && sales.some((s) => s.id === focusParam)) {
