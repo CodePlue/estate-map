@@ -472,7 +472,7 @@ body.view-list .list-panel { display: flex; }
 
 .pill-pin.wk .dot, .pill-pin.wk.matched .dot { background: var(--dc); box-shadow: 0 0 0 1.5px #fff; }
 .pill-pin.live { box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.6), var(--shadow-pin); }
-.pill-pin.seen { opacity: 0.5; }
+.pill-pin .ck { flex: none; display: grid; place-items: center; width: 16px; height: 16px; margin-right: -3px; border-radius: 50%; background: var(--open); color: #fff; font-size: 10px; }
 .pill-pin .fv { color: var(--fav); }
 .pill-pin.matched .fv { color: #fff; }
 
@@ -516,8 +516,6 @@ body.view-list .list-panel { display: flex; }
 .pill-pin.ghost:not(.matched) { background: #e2e8f0; color: #475569; }
 .pin-wrap.sel .pill-pin.ghost { background: #1a73e8; color: #fff; opacity: 1; }
 .pthumb .fav-flag, .lrow .thumb .fav-flag { position: absolute; right: 5px; bottom: 5px; width: 20px; height: 20px; border-radius: 50%; background: var(--fav); color: #fff; display: grid; place-items: center; font-size: 11px; }
-.pcard.seen .pthumb img, .lrow.seen .thumb img { filter: grayscale(0.85); opacity: 0.6; }
-.pcard.seen h2, .pcard.seen .when, .lrow.seen h2 { opacity: 0.6; }
 .heart { flex: none; width: 30px; height: 28px; border-radius: 999px; display: grid; place-items: center; background: var(--wash); color: var(--muted); font-size: 15px; line-height: 1; }
 .heart.on { background: var(--fav); color: #fff; }
 .pbot .right { display: flex; align-items: center; gap: 6px; flex: none; }
@@ -904,10 +902,9 @@ function startApp(DATA) {
     };
     const key = sort === "near" && !me ? "size" : sort;
     const cmp = by[key];
-    const seenLast = (a, b) => Number(Boolean(seenMark(a))) - Number(Boolean(seenMark(b)));
     // week view: group by day first so the list and the swipe order go Fri -> Sat -> Sun
-    if (wk && dayFilter === "all") return list.sort((a, b) => primaryDay(a).localeCompare(primaryDay(b)) || seenLast(a, b) || cmp(a, b));
-    return list.sort((a, b) => seenLast(a, b) || cmp(a, b));
+    if (wk && dayFilter === "all") return list.sort((a, b) => primaryDay(a).localeCompare(primaryDay(b)) || cmp(a, b));
+    return list.sort(cmp);
   }
 
   function pinLabel(s) {
@@ -958,12 +955,12 @@ function startApp(DATA) {
       if (pinCache.get(s.id) !== sig) {
         pinCache.set(s.id, sig);
         const cls = [st, "ns-" + ns, ghost && "ghost", matched && "matched", wk && "wk", ns === "open" && "live", seen && "seen"].filter(Boolean).join(" ");
-        const html = `<div class="pill-pin ${cls}" style="--dc:${dc}"><span class="dot"></span>${fav ? `<span class="fv">♥</span>` : ""}<span>${esc(lbl)}${seen ? " ✓" : ""}</span></div>`;
+        const html = `<div class="pill-pin ${cls}" style="--dc:${dc}"><span class="dot"></span>${fav ? `<span class="fv">♥</span>` : ""}<span>${esc(lbl)}</span>${seen ? `<span class="ck">✓</span>` : ""}</div>`;
         mk.setIcon(L.divIcon({ className: "pin-wrap", html, iconSize: [0, 0], iconAnchor: [0, 0] }));
       }
       const el = mk.getElement();
       if (el) el.classList.toggle("sel", activeId === s.id);
-      mk.setZIndexOffset(activeId === s.id ? 1000 : seen ? -100 : fav ? 600 : matched ? 500 : st === "open" ? 200 : st === "soon" ? 100 : 0);
+      mk.setZIndexOffset(activeId === s.id ? 1000 : fav ? 600 : matched ? 500 : st === "open" ? 200 : st === "soon" ? 100 : 0);
     }
   }
 
@@ -1164,7 +1161,7 @@ function startApp(DATA) {
   function routeStops() {
     if (wk && dayFilter === "all") return [];
     if (!wk && !isToday()) return [];
-    let pool = visible().filter((s) => s.lat != null && !seenMark(s) && status(s).k !== "closed");
+    let pool = visible().filter((s) => s.lat != null && status(s).k !== "closed");
     const out = [];
     let cur = me;
     if (!cur && pool.length) {
