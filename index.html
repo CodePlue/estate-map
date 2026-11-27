@@ -483,12 +483,38 @@ body.view-list .list-panel { display: flex; }
 .when .span { color: var(--muted); font-weight: 600; }
 .dtag { flex: none; padding: 1px 7px; border-radius: 6px; background: var(--dc); color: #fff; font-size: 11.5px; font-weight: 800; letter-spacing: 0.02em; }
 .pwhere { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
-.pwhere .city { overflow: hidden; text-overflow: ellipsis; }
+.pwhere .city { flex: none; max-width: 55%; overflow: hidden; text-overflow: ellipsis; }
 .pwhere .hid { color: var(--muted); font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
 .pname { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .badge { flex: none; padding: 1px 6px; border-radius: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.03em; }
 .badge.new { background: var(--accent); color: #fff; }
 .badge.seen { background: var(--open); color: #fff; }
+/* "is it open right now" ribbon */
+.nowbar { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -11px -11px 0; padding: 6px 11px; border-radius: 17px 17px 0 0; font-size: 12.5px; font-weight: 800; white-space: nowrap; }
+.nowbar .ns-txt { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.nowbar .ns-ic { flex: none; }
+.nowbar .ns-dates { flex: none; font-weight: 700; opacity: 0.92; font-variant-numeric: tabular-nums; }
+.nowbar.ns-open { background: var(--open); color: #fff; }
+.nowbar.ns-later { background: var(--soon); color: #fff; }
+.nowbar.ns-notyet { background: repeating-linear-gradient(-45deg, #475569 0 10px, #3f4b5c 10px 20px); color: #fff; }
+.nowbar.ns-break, .nowbar.ns-done, .nowbar.ns-na { background: var(--wash); color: var(--muted); }
+.nowbar.sm { display: inline-flex; margin: 0 0 3px; padding: 3px 9px; border-radius: 7px; font-size: 11.5px; max-width: 100%; }
+.nowbar.sm .ns-dates { font-weight: 600; }
+.nowbar.sm:not(.ns-notyet) .ns-dates { display: none; }
+.nowbar.lg { flex-direction: column; align-items: flex-start; gap: 2px; margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; font-size: 15px; white-space: normal; }
+.nowbar.lg .ns-dates { font-size: 13px; font-weight: 600; }
+.pcard.ns-open { border: 2px solid var(--open); }
+.pcard.ns-later { border: 2px solid var(--soon); }
+.pcard.ns-notyet { border: 2px dashed #64748b; background: var(--wash); }
+.pcard.ns-notyet .pthumb img, .lrow.ns-notyet .thumb img { filter: grayscale(0.55); opacity: 0.75; }
+.pcard.ns-notyet .pdir { background: #64748b; }
+.lrow.ns-open { box-shadow: inset 5px 0 var(--open); }
+.lrow.ns-later { box-shadow: inset 5px 0 var(--soon); }
+.lrow.ns-notyet { box-shadow: inset 5px 0 #64748b; background: color-mix(in srgb, var(--wash) 55%, transparent); }
+.pill-pin.ns-notyet, .pill-pin.ns-break { border: 1.5px dashed #64748b; }
+.pill-pin.ghost { opacity: 0.6; }
+.pill-pin.ghost:not(.matched) { background: #e2e8f0; color: #475569; }
+.pin-wrap.sel .pill-pin.ghost { background: #1a73e8; color: #fff; opacity: 1; }
 .pthumb .fav-flag, .lrow .thumb .fav-flag { position: absolute; right: 5px; bottom: 5px; width: 20px; height: 20px; border-radius: 50%; background: var(--fav); color: #fff; display: grid; place-items: center; font-size: 11px; }
 .pcard.seen .pthumb img, .lrow.seen .thumb img { filter: grayscale(0.85); opacity: 0.6; }
 .pcard.seen h2, .pcard.seen .when, .lrow.seen h2 { opacity: 0.6; }
@@ -752,6 +778,50 @@ function startApp(DATA) {
 
   // sale days that are not over yet
   const remainingDays = (s) => { const now = new Date(); return s.days.filter((d) => new Date(d.end) > now); };
+
+  // Where a sale stands RIGHT NOW, whatever day is picked. Drives the card ribbon, the pin style and the
+  // Directions guard (went to a Saturday-only sale on a Friday once).
+  const mdFmt = new Intl.DateTimeFormat([], { month: "short", day: "numeric" });
+  const md = (d) => mdFmt.format(d);
+  function nextDayName(d) {
+    const dy = ymd(new Date(d.start));
+    return dy === ymd(new Date(Date.now() + 864e5)) ? "tomorrow" : WEEKDAY[dateOf(dy).getDay()];
+  }
+  function nowState(s) {
+    if (!s.days.length) return { k: "na", txt: "Hours not posted yet" };
+    const now = new Date(), today = ymd(now);
+    const td = s.days.find((d) => ymd(new Date(d.start)) === today);
+    const next = s.days.find((d) => new Date(d.start) > now && ymd(new Date(d.start)) !== today);
+    const at = (d) => `${nextDayName(d)} ${st12(new Date(d.start))}`;
+    if (td) {
+      const st = new Date(td.start), en = new Date(td.end);
+      if (now < st) return { k: "later", txt: `Opens today at ${st12(st)}` };
+      if (td.showEnd && now >= en) return next ? { k: "break", txt: `Closed now · back ${at(next)}`, short: `Closed now · back ${nextDayName(next)}` } : { k: "done", txt: `Ended today at ${st12(en)}`, short: "Done for good" };
+      return { k: "open", txt: td.showEnd ? `Open now · til ${st12(en)}` : "Open now" };
+    }
+    if (next) {
+      const started = s.days.some((d) => ymd(new Date(d.start)) < today);
+      return { k: "notyet", txt: `Not open today · ${started ? "back" : "starts"} ${at(next)}`, short: "Not open today" };
+    }
+    return { k: "done", txt: "Sale is over", short: "Sale is over" };
+  }
+  // "Sat Nov 28 only" / "Fri–Sun · Nov 27–29" / "Fri Nov 27 + Sun 29"
+  function datesText(s) {
+    const ds = s.days.map((d) => new Date(d.start));
+    if (!ds.length) return "";
+    const W = (d) => WEEKDAY[d.getDay()];
+    if (ds.length === 1) return `${W(ds[0])} ${md(ds[0])} only`;
+    const a = ds[0], b = ds[ds.length - 1];
+    const run = ds.every((d, i) => !i || Math.round((dateOf(ymd(d)) - dateOf(ymd(ds[i - 1]))) / 864e5) === 1);
+    if (run) return `${W(a)}–${W(b)} · ${md(a)}–${a.getMonth() === b.getMonth() ? b.getDate() : md(b)}`;
+    return ds.map((d, i) => `${W(d)} ${i && d.getMonth() === ds[i - 1].getMonth() ? d.getDate() : md(d)}`).join(" + ");
+  }
+  const NS_ICON = { open: "●", later: "◷", notyet: "⏳", break: "⏸", done: "✕", na: "?" };
+  function nowBar(s, size = "") {
+    const ns = nowState(s);
+    const txt = size === "lg" ? ns.txt : ns.short || ns.txt;
+    return `<div class="nowbar ns-${ns.k} ${size}"><span class="ns-txt"><span class="ns-ic">${NS_ICON[ns.k]}</span>${esc(txt)}</span><span class="ns-dates">${esc(datesText(s))}</span></div>`;
+  }
   const onDay = (s, day) => remainingDays(s).some((d) => ymd(new Date(d.start)) === day);
   function weekDays() {
     const c = {};
@@ -848,7 +918,7 @@ function startApp(DATA) {
       if (d) {
         const st = new Date(d.start);
         if (status(s).k === "open") return `${star}til ${st12(new Date(d.end))}`;
-        return `${star}${dayFilter === "all" ? dayName(ymd(st)) + " " : ""}${st12(st)}`;
+        return `${star}${dayFilter === "all" || ymd(st) !== ymd(new Date()) ? dayName(ymd(st)) + " " : ""}${st12(st)}`;
       }
     }
     if (sort === "near" && m != null) return `${star}${fmtMi(m)} mi`;
@@ -882,10 +952,12 @@ function startApp(DATA) {
       const matched = hasMatches(s);
       const fav = isFav(s), seen = Boolean(seenMark(s));
       const dc = dayColor(primaryDay(s) === "9999" ? DATA.date : primaryDay(s));
-      const sig = `${st}|${matched}|${lbl}|${fav}|${seen}|${dc}`;
+      const ns = nowState(s).k;
+      const ghost = ["notyet", "break", "done"].includes(ns) && !(wk && dayFilter !== "all" && dayFilter !== ymd(new Date()));
+      const sig = `${st}|${matched}|${lbl}|${fav}|${seen}|${dc}|${ns}|${ghost}`;
       if (pinCache.get(s.id) !== sig) {
         pinCache.set(s.id, sig);
-        const cls = [st, matched && "matched", wk && "wk", st === "open" && "live", seen && "seen"].filter(Boolean).join(" ");
+        const cls = [st, "ns-" + ns, ghost && "ghost", matched && "matched", wk && "wk", ns === "open" && "live", seen && "seen"].filter(Boolean).join(" ");
         const html = `<div class="pill-pin ${cls}" style="--dc:${dc}"><span class="dot"></span>${fav ? `<span class="fv">♥</span>` : ""}<span>${esc(lbl)}${seen ? " ✓" : ""}</span></div>`;
         mk.setIcon(L.divIcon({ className: "pin-wrap", html, iconSize: [0, 0], iconAnchor: [0, 0] }));
       }
@@ -1022,6 +1094,16 @@ function startApp(DATA) {
     const dest = encodeURIComponent(s.address || `${s.lat},${s.lng}`);
     return `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
   }
+  // Directions to a sale that isn't open today asks first. Returns true when it handled the click.
+  function guardGo(e, a) {
+    const s = a.dataset.go && sales.find((x) => x.id === +a.dataset.go);
+    const ns = s && nowState(s);
+    if (!ns || !["notyet", "break", "done"].includes(ns.k)) return false;
+    const msg = `⚠️ ${ns.txt}.\n${datesText(s)}\n\nGet directions anyway?`;
+    if (inTMA && tg.showConfirm) { e.preventDefault(); tg.showConfirm(msg, (ok) => ok && openExternal(a.href)); }
+    else if (!confirm(msg)) e.preventDefault();
+    return true;
+  }
   function openExternal(url) {
     if (inTMA && tg.openLink) tg.openLink(url);
     else window.open(url, "_blank", "noopener");
@@ -1043,9 +1125,8 @@ function startApp(DATA) {
     const dy = ymd(new Date(d.start));
     const tag = `<span class="dtag" style="--dc:${dayColor(dy)}">${dayName(dy)}</span>`;
     let txt;
-    if (st.k === "open") txt = `<span class="live">Open now · til ${st12(new Date(d.end))}</span>`;
-    else if (st.k === "closed") txt = `<span class="ended">${esc(st.label)}</span>`;
-    else txt = `<span>${shortHours(d)}</span>`;
+    if (st.k === "closed") txt = `<span class="ended">${md(new Date(d.start))} · ${esc(st.label)}</span>`;
+    else txt = `<span class="${st.k === "open" ? "live" : ""}">${md(new Date(d.start))} · ${shortHours(d)}</span>`;
     const rem = remainingDays(s);
     const span = wk && dayFilter === "all" && rem.length > 1 ? `<span class="span">→ ${WEEKDAY[new Date(rem[rem.length - 1].start).getDay()]}</span>` : "";
     return `<span class="when">${tag}${txt}${span}</span>`;
@@ -1212,7 +1293,8 @@ function startApp(DATA) {
       if (s.value) bits.push(money(s.value));
       if (s.year) bits.push(s.year);
       const note = addrNote(s);
-      return `<article class="pcard ${s.id === activeId ? "active" : ""} ${seenMark(s) ? "seen" : ""}" data-id="${s.id}">
+      return `<article class="pcard ns-${nowState(s).k} ${s.id === activeId ? "active" : ""} ${seenMark(s) ? "seen" : ""}" data-id="${s.id}">
+        ${nowBar(s)}
         <div class="pthumb">
           ${s.photo ? `<img src="${esc(s.photo)}" alt="" loading="lazy" decoding="async">` : ICONS.house}
           ${isFav(s) ? `<span class="fav-flag">♥</span>` : ""}
@@ -1229,7 +1311,7 @@ function startApp(DATA) {
             <span class="pfacts">${esc(bits.join(" · "))}</span>
             <span class="right">
               <button class="heart ${isFav(s) ? "on" : ""}" data-fav="${s.id}" aria-label="${isFav(s) ? "Unsave" : "Save"}">${isFav(s) ? "♥" : "♡"}</button>
-              <a class="pdir" href="${esc(mapsLink(s))}" data-ext="1" target="_blank" rel="noopener">${ICONS.nav}Go</a>
+              <a class="pdir" href="${esc(mapsLink(s))}" data-ext="1" data-go="${s.id}" target="_blank" rel="noopener">${ICONS.nav}Go</a>
             </span>
           </div>
         </div>
@@ -1241,7 +1323,7 @@ function startApp(DATA) {
         const hb = e.target.closest("[data-fav]");
         if (hb) { e.stopPropagation(); toggleFav(sales.find((x) => x.id === +hb.dataset.fav)); return; }
         const a = e.target.closest("a[data-ext]");
-        if (a) { if (inTMA && tg.openLink) { e.preventDefault(); openExternal(a.href); } return; }
+        if (a) { if (!guardGo(e, a) && inTMA && tg.openLink) { e.preventDefault(); openExternal(a.href); } return; }
         openDetail(+card.dataset.id);
       };
     }
@@ -1290,12 +1372,13 @@ function startApp(DATA) {
     if (s.sqft) f.push(`<span>${num(s.sqft)} sf</span>`);
     if (s.value) f.push(`<span>${money(s.value)}</span>`);
     const note = addrNote(s);
-    return `<div class="lrow ${seenMark(s) ? "seen" : ""}" data-id="${s.id}" role="button" tabindex="0">
+    return `<div class="lrow ns-${nowState(s).k} ${seenMark(s) ? "seen" : ""}" data-id="${s.id}" role="button" tabindex="0">
       <span class="thumb">
         ${s.photo ? `<img src="${esc(s.photo)}" alt="" loading="lazy" decoding="async">` : ICONS.house}
         ${isFav(s) ? `<span class="fav-flag">♥</span>` : ""}
       </span>
       <span class="lrow-main">
+        ${nowBar(s, "sm")}
         ${whenHtml(s)}
         <h2>${esc(s.city)}${badgesHtml(s) ? " " + badgesHtml(s) : ""}</h2>
         <div class="sub">${esc(note || s.summary || s.name)}</div>
@@ -1304,7 +1387,7 @@ function startApp(DATA) {
       </span>
       <span class="side">
         <button class="heart ${isFav(s) ? "on" : ""}" data-fav="${s.id}" aria-label="${isFav(s) ? "Unsave" : "Save"}">${isFav(s) ? "♥" : "♡"}</button>
-        <a class="dir-ic" href="${esc(mapsLink(s))}" data-ext="1" target="_blank" rel="noopener" aria-label="Directions">${ICONS.nav}</a>
+        <a class="dir-ic" href="${esc(mapsLink(s))}" data-ext="1" data-go="${s.id}" target="_blank" rel="noopener" aria-label="Directions">${ICONS.nav}</a>
       </span>
     </div>`;
   }
@@ -1348,7 +1431,7 @@ function startApp(DATA) {
         const hb = e.target.closest("[data-fav]");
         if (hb) { e.stopPropagation(); toggleFav(sales.find((x) => x.id === +hb.dataset.fav)); return; }
         const a = e.target.closest("a[data-ext]");
-        if (a) { if (inTMA && tg.openLink) { e.preventDefault(); openExternal(a.href); } return; }
+        if (a) { if (!guardGo(e, a) && inTMA && tg.openLink) { e.preventDefault(); openExternal(a.href); } return; }
         openDetail(+r.dataset.id);
       };
     }
@@ -1501,9 +1584,8 @@ function startApp(DATA) {
         ${s.pictures ? `<span class="count">${s.pictures} photos</span>` : ""}
       </a>
       <h2>${esc(s.name)}</h2>
+      ${nowBar(s, "lg")}
       <div class="meta-pills">
-        ${dayOf(s) ? `<span class="mpill day" style="--dc:${dayColor(ymd(new Date(dayOf(s).start)))}">${dayName(ymd(new Date(dayOf(s).start)))} ${shortHours(dayOf(s))}</span>` : ""}
-        ${!dayOf(s) || st.k !== "soon" ? `<span class="mpill"><span class="dot" style="background:var(--${st.k})"></span>${esc(st.label)}${st.sub ? ` · ${esc(st.sub)}` : ""}</span>` : ""}
         ${m != null ? `<span class="mpill dist">${fmtMi(m)} mi away</span>` : ""}
         ${s.isNew ? `<span class="badge new">NEW</span>` : ""}
       </div>
@@ -1511,7 +1593,7 @@ function startApp(DATA) {
         ? `<button class="addr-btn" id="copy-addr"><span>${esc(s.address)}</span><span id="copy-lbl">Copy</span></button>`
         : `<div class="addr-btn" style="cursor:default"><span>Address not posted yet · ${esc(s.city)}</span><span></span></div>`}
       <div class="actions">
-        <a class="btn primary" href="${esc(mapsLink(s))}" data-ext="1" target="_blank" rel="noopener">${ICONS.nav}Directions</a>
+        <a class="btn primary" href="${esc(mapsLink(s))}" data-ext="1" data-go="${s.id}" target="_blank" rel="noopener">${ICONS.nav}Directions</a>
         <a class="btn" href="${esc(s.url)}" data-ext="1" target="_blank" rel="noopener">Listing</a>
         ${zillow ? `<a class="btn" href="${esc(zillow)}" data-ext="1" target="_blank" rel="noopener">Zillow</a>` : `<span class="btn disabled">Zillow</span>`}
       </div>
@@ -1545,7 +1627,7 @@ function startApp(DATA) {
       try { await navigator.clipboard.writeText(s.address); $("#copy-lbl").textContent = "Copied"; setTimeout(() => { if ($("#copy-lbl")) $("#copy-lbl").textContent = "Copy"; }, 1400); } catch {}
     });
     for (const a of document.querySelectorAll("#dscroll a[data-ext]")) {
-      a.onclick = (e) => { if (inTMA && tg.openLink) { e.preventDefault(); openExternal(a.href); } };
+      a.onclick = (e) => { if (!guardGo(e, a) && inTMA && tg.openLink) { e.preventDefault(); openExternal(a.href); } };
     }
   }
 
