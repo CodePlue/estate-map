@@ -1101,6 +1101,12 @@ function startApp(DATA) {
     else if (!confirm(msg)) e.preventDefault();
     return true;
   }
+  // Each picture has separate thumbnail (1-2) and full-size (1-1) UUIDs. Old data only has one UUID ("u" or a bare string).
+  function photoUrls(s, ph) {
+    const u = typeof ph === "string" ? ph : ph.u, f = typeof ph === "string" ? null : ph.f;
+    const base = `https://picturescdn.estatesales.net/${s.id}`;
+    return { thumb: `${base}/1-2/${u}.jpg`, full: f && f !== u ? `${base}/1-1/${f}.jpg` : `${base}/1-1/${u}.jpg` };
+  }
   function openExternal(url) {
     if (inTMA && tg.openLink) tg.openLink(url);
     else window.open(url, "_blank", "noopener");
@@ -1528,8 +1534,7 @@ function startApp(DATA) {
       for (const [term, photos] of Object.entries(s.matches || {})) {
         const startIdx = allLb.length;
         const shots = photos.map((ph, k) => {
-          const thumb = `https://picturescdn.estatesales.net/${s.id}/1-2/${ph.u}.jpg`;
-          const full = `https://picturescdn.estatesales.net/${s.id}/1-1/${ph.u}.jpg`;
+          const { thumb, full } = photoUrls(s, ph);
           const pct = Math.round(ph.p * 100);
           allLb.push({ full, cap: `★ ${term} (${pct}% match)` });
           return `<button class="mshot" data-lb="${startIdx + k}"><img src="${esc(thumb)}" alt="" loading="lazy"><span class="conf">${pct}%</span></button>`;
@@ -1545,9 +1550,8 @@ function startApp(DATA) {
     let elecHtml = "";
     if (s.elecPhotos?.length) {
       elecLbStart = allLb.length;
-      const shots = s.elecPhotos.map((u, k) => {
-        const thumb = `https://picturescdn.estatesales.net/${s.id}/1-2/${u}.jpg`;
-        const full = `https://picturescdn.estatesales.net/${s.id}/1-1/${u}.jpg`;
+      const shots = s.elecPhotos.map((ph, k) => {
+        const { thumb, full } = photoUrls(s, ph);
         allLb.push({ full, cap: `⚡ Electronics (${k + 1}/${s.elecPhotos.length})` });
         return `<button class="mshot elec" data-lb="${elecLbStart + k}"><img src="${esc(thumb)}" alt="" loading="lazy"></button>`;
       }).join("");
